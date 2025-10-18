@@ -35,6 +35,9 @@ def view_doctors(request):
             Q(specialization__icontains=search_query)
         )
 
+    # FIX: Always order by specialization for proper grouping
+    doctors = doctors.order_by('specialization')
+
     # Get specializations for filter dropdown
     specializations = Doctor.SPECIALIZATION_CHOICES
 
