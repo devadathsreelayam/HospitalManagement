@@ -66,7 +66,7 @@
                     <div class="col-lg-6 mb-3">
                         <div class="card h-100">
                             <div class="card-body">
-                                <h5 class="card-title">Dr. {{ doctor.user.get_full_name }}</h5>
+                                <h5 class="card-title">Dr. {{ doctor.user.get_full_name }}, {{ doctor.qualification }}</h5>
                                 <p class="card-text">
                                     <span class="badge bg-info">{{ doctor.get_specialization_display }}</span><br>
                                     <small class="text-muted">

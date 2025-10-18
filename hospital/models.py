@@ -10,8 +10,6 @@ class User(AbstractUser):
         ('doctor', 'Doctor'),
     )
 
-    # Don't define user_id - AbstractUser already has 'id'
-    # Don't define full_name - use first_name and last_name from AbstractUser
     phone = models.CharField(max_length=10, blank=True)  # Increased length
     user_type = models.CharField(max_length=10, choices=USER_TYPES, default='patient')
 
@@ -43,6 +41,7 @@ class Doctor(models.Model):
     ]
 
     user = models.OneToOneField(User, on_delete=models.CASCADE)
+    qualification = models.CharField(max_length=20, default='MBBS')
     specialization = models.CharField(max_length=100, choices=SPECIALIZATION_CHOICES, default='general')
     start_time = models.TimeField(default='09:00:00')
     end_time = models.TimeField(default='17:00:00')
@@ -54,4 +53,4 @@ class Doctor(models.Model):
         return self.available_days.split(',') if self.available_days else []
 
     def __str__(self):
-        return f"Dr. {self.user.get_full_name()} - {self.specialization}"
+        return f"Dr. {self.user.get_full_name()}, {self.qualification} - {self.specialization.capitalize()}"
