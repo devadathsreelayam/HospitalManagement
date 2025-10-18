@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Doctors</title>
+</head>
+<body>
+    <h1>Our Doctors</h1>
+    <ol>
+        {% for doc in doctors %}
+            <li>
+                User: {{ doc.user }}<br>
+                First Name: {{ doc.user.first_name }}<br>
+                Last Name: {{ doc.user.last_name }}<br>
+                Full Name: {{ doc.user.get_full_name }}<br>
+                Specialization: {{ doc.specialization }}<br>
+                Available Days: {{ doc.get_available_days_list }}<br>
+                <hr>
+            </li>
+        {% endfor %}
+    </ol>
+</body>
+</html>
