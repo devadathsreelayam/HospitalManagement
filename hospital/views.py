@@ -9,6 +9,14 @@ def index(request):
     return render(request, 'home.html')
 
 
+def login(request):
+    render(request, 'login.html')
+
+
+def register(request):
+    render(request, 'register.html')
+
+
 def view_doctors(request):
     doctors = Doctor.objects.all().select_related('user')
 
