@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+{% block content %}
+    <div class="row">
+        <div class="col-md-8">
+            <h2>Book Appointment with Dr. {{ doctor.user.get_full_name }}</h2>
+            <p class="text-muted">{{ doctor.get_specialization_display }}</p>
+
+            <form method="post">
+                {% csrf_token %}
+
+                <div class="mb-3">
+                    <label for="appointment_date" class="form-label">Select Date</label>
+                    <input type="date" class="form-control" id="appointment_date" name="appointment_date" required
+                           min="{{ today|date:'Y-m-d' }}">
+                </div>
+
+                <div class="mb-3">
+                    <label for="appointment_time" class="form-label">Select Time</label>
+                    <select class="form-select" id="appointment_time" name="appointment_time" required>
+                        <option value="">Choose a time slot</option>
+                        <!-- Time slots will be populated by JavaScript or backend -->
+                        <option value="09:00">9:00 AM</option>
+                        <option value="09:30">9:30 AM</option>
+                        <option value="10:00">10:00 AM</option>
+                        <!-- Add more time slots -->
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label for="reason" class="form-label">Reason for Visit</label>
+                    <textarea class="form-control" id="reason" name="reason" rows="3"
+                              placeholder="Briefly describe your symptoms or reason for appointment"></textarea>
+                </div>
+
+                <button type="submit" class="btn btn-success">Confirm Booking</button>
+                <a href="{% url 'view_doctors' %}" class="btn btn-secondary">Cancel</a>
+            </form>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Doctor Information</h5>
+                </div>
+                <div class="card-body">
+                    <p><strong>Dr. {{ doctor.user.get_full_name }}</strong></p>
+                    <p>{{ doctor.get_specialization_display }}</p>
+                    <p><small>Available: {{ doctor.available_days|title }}</small></p>
+                    <p><small>Hours: {{ doctor.start_time|time:"g:i A" }} - {{ doctor.end_time|time:"g:i A" }}</small></p>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
