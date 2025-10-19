@@ -1,15 +1,17 @@
+from datetime import datetime, timedelta
+from django.utils import timezone
+
 from django.db.models import Q
-from django.http import HttpResponse
-from django.shortcuts import render, redirect
+from django.http import HttpResponse, JsonResponse
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login, authenticate, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 
-from hospital.models import Doctor
+from hospital.models import Doctor, Appointment
 from .forms import PatientRegistrationForm
 
 
-# Create your views here.
 def index(request):
     return render(request, 'home.html')
 
@@ -85,7 +87,16 @@ def patient_dashboard(request):
         messages.error(request, 'Access denied.')
         return redirect('dashboard')
 
-    return render(request, 'patient_dash.html', {'user': request.user})
+    # Get patient's appointments
+    from .models import Appointment
+    appointments = Appointment.objects.filter(patient=request.user).order_by('-appointment_date')
+
+    context = {
+        'appointments': appointments,
+        'patient': request.user.patient  # Access patient profile
+    }
+
+    return render(request, 'patient_dash.html', context)
 
 
 @login_required
@@ -139,9 +150,65 @@ def view_doctors(request):
     return render(request, 'doctors.html', context)
 
 
+@login_required
 def make_appointment(request, doctor_id):
-    doctor = Doctor.objects.get(pk=doctor_id)
+    doctor = get_object_or_404(Doctor, id=doctor_id)
+
+    if request.method == 'POST':
+        appointment_date = request.POST.get('appointment_date')
+        appointment_time = request.POST.get('appointment_time')
+        reason = request.POST.get('reason')
+
+        # Convert time string to time object
+        time_obj = datetime.strptime(appointment_time, "%H:%M")
+
+        # Create appointment
+        appointment = Appointment.objects.create(
+            patient=request.user,
+            doctor=doctor,
+            appointment_date=appointment_date,
+            appointment_time=appointment_time,
+            reason=reason,
+        )
+
+        messages.success(request, f'Appointment booked successfully! Your token number is {appointment.token_number}')
+        return redirect('appointment_success', appointment_id=appointment.id)
+
+    # GET request - show booking form
+    today = timezone.now().date()
+
     context = {
-        'doctor': doctor
+        'doctor': doctor,
+        'today': today,
+        'max_date': today + timedelta(days=30),  # Book up to 30 days in advance
     }
+
     return render(request, 'appointment.html', context)
+
+
+@login_required
+def get_available_time_slots(request, doctor_id):
+    """API endpoint to get available time slots"""
+    doctor = get_object_or_404(Doctor, id=doctor_id)
+    date_str = request.GET.get('date')
+
+    if date_str:
+        try:
+            appointment_date = datetime.strptime(date_str, '%Y-%m-%d').date()
+            available_slots = doctor.get_available_time_slots(appointment_date)
+            return JsonResponse({'available_slots': available_slots})
+        except ValueError:
+            return JsonResponse({'error': 'Invalid date format'}, status=400)
+
+    return JsonResponse({'error': 'Date parameter required'}, status=400)
+
+
+@login_required
+def appointment_success(request, appointment_id):
+    """Show appointment confirmation page"""
+    appointment = get_object_or_404(Appointment, id=appointment_id, patient=request.user)
+
+    context = {
+        'appointment': appointment
+    }
+    return render(request, 'appointment_success.html', context)

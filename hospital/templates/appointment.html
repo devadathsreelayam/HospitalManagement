@@ -10,20 +10,17 @@
 
                 <div class="mb-3">
                     <label for="appointment_date" class="form-label">Select Date</label>
-                    <input type="date" class="form-control" id="appointment_date" name="appointment_date" required
-                           min="{{ today|date:'Y-m-d' }}">
+                    <input type="date" class="form-control" id="appointment_date" name="appointment_date"
+                       min="{{ today|date:'Y-m-d' }}" max="{{ max_date|date:'Y-m-d' }}" required
+                       onchange="loadTimeSlots()">
                 </div>
 
                 <div class="mb-3">
-                    <label for="appointment_time" class="form-label">Select Time</label>
+                    <label for="appointment_time" class="form-label">Select Time Slot</label>
                     <select class="form-select" id="appointment_time" name="appointment_time" required>
-                        <option value="">Choose a time slot</option>
-                        <!-- Time slots will be populated by JavaScript or backend -->
-                        <option value="09:00">9:00 AM</option>
-                        <option value="09:30">9:30 AM</option>
-                        <option value="10:00">10:00 AM</option>
-                        <!-- Add more time slots -->
+                        <option value="">Select a date first</option>
                     </select>
+                    <div class="form-text">Each slot is 1 hour. Token number will be assigned automatically.</div>
                 </div>
 
                 <div class="mb-3">
@@ -51,4 +48,41 @@
             </div>
         </div>
     </div>
+
+    <script>
+    function loadTimeSlots() {
+        const dateInput = document.getElementById('appointment_date');
+        const timeSelect = document.getElementById('appointment_time');
+        const doctorId = {{ doctor.id }};
+
+        if (!dateInput.value) {
+            timeSelect.innerHTML = '<option value="">Select a date first</option>';
+            return;
+        }
+
+        // Show loading
+        timeSelect.innerHTML = '<option value="">Loading time slots...</option>';
+
+        // Fetch available time slots via AJAX
+        fetch(`/api/doctors/${doctorId}/time-slots/?date=${dateInput.value}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.available_slots && data.available_slots.length > 0) {
+                    timeSelect.innerHTML = '<option value="">Choose a time slot</option>';
+                    data.available_slots.forEach(slot => {
+                        const option = document.createElement('option');
+                        option.value = slot;
+                        option.textContent = slot;
+                        timeSelect.appendChild(option);
+                    });
+                } else {
+                    timeSelect.innerHTML = '<option value="">No slots available</option>';
+                }
+            })
+            .catch(error => {
+                timeSelect.innerHTML = '<option value="">Error loading slots</option>';
+                console.error('Error:', error);
+            });
+    }
+    </script>
 {% endblock %}

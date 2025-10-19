@@ -13,4 +13,6 @@ urlpatterns = [
     path('admin_dashboard', views.admin_dashboard, name='admin_dashboard'),
     path('doctors/', views.view_doctors, name='view_doctors'),
     path('doctors/book/<int:doctor_id>/', views.make_appointment, name='make_appointment'),
+    path('booking/success/<int:appointment_id>/', views.appointment_success, name='appointment_success'),
+    path('api/doctors/<int:doctor_id>/time-slots/', views.get_available_time_slots, name='get_time_slots'),
 ]
