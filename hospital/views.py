@@ -81,16 +81,28 @@ def dashboard(request):
 
 @login_required
 def patient_dashboard(request):
+    if request.user.user_type != 'patient':
+        messages.error(request, 'Access denied.')
+        return redirect('dashboard')
+
     return render(request, 'patient_dash.html', {'user': request.user})
 
 
 @login_required
 def doctor_dashboard(request):
+    if request.user.user_type != 'doctor':
+        messages.error(request, 'Access denied.')
+        return redirect('dashboard')
+
     return render(request, 'doctor_dash.html', {'user': request.user})
 
 
 @login_required
 def admin_dashboard(request):
+    if request.user.user_type != 'admin':
+        messages.error(request, 'Access denied.')
+        return redirect('dashboard')
+
     return render(request, 'admin_dash.html', {'user': request.user})
 
 
