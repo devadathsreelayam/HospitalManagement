@@ -49,7 +49,22 @@ def logout_view(request):
 
 
 def register(request):
-    render(request, 'register.html')
+    if request.user.is_authenticated:
+        return redirect('dashboard')
+
+    if request.method == "POST":
+        form = PatientRegistrationForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+            login(request, user)
+            messages.success(request, f"Registration successful! Welcome {user.get_full_name()}!")
+            return redirect('dashboard')
+        else:
+            messages.error(request, 'Please correct the error below.')
+    else:
+        form = PatientRegistrationForm()
+
+    return render(request, 'register.html', {'form': form})
 
 
 @login_required
