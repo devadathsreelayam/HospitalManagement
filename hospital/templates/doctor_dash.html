@@ -1,5 +1,353 @@
 {% extends 'base.html' %}
+
 {% block content %}
-    <h1>Doctor Dashboard</h1>
-    <p>Welcome back, {{ user.get_full_name }}</p>
+<div class="row">
+    <div class="col-md-12">
+        <h2>Welcome, Dr. {{ user.get_full_name }}</h2>
+        <p class="text-muted">Doctor Dashboard - {{ doctor.get_specialization_display }}</p>
+    </div>
+</div>
+
+<!-- Statistics Cards -->
+<div class="row mt-4">
+    <div class="col-md-4">
+        <div class="card text-center">
+            <div class="card-body">
+                <h3>{{ today_appointments_count }}</h3>
+                <p class="text-muted">Today's Appointments</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-center">
+            <div class="card-body">
+                <h3>{{ completed_today_count }}</h3>
+                <p class="text-muted">Completed Today</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-center">
+            <div class="card-body">
+                <h3>{{ appointments.count }}</h3>
+                <p class="text-muted">{{ selected_date|date:"M d, Y" }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Date Selector and Appointments Section -->
+<div class="row mt-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Appointments for {{ selected_date|date:"F d, Y" }}</h5>
+
+                <!-- Date Selector Form -->
+                <form method="get" class="d-flex">
+                    <input type="date" name="date" class="form-control me-2"
+                           value="{{ selected_date|date:'Y-m-d' }}"
+                           min="{{ min_date|date:'Y-m-d' }}"
+                           max="{{ max_date|date:'Y-m-d' }}"
+                           onchange="this.form.submit()">
+                    {% if selected_date != today %}
+                    <a href="{% url 'doctor_dashboard' %}" class="btn btn-outline-secondary">Show&nbsp;Today</a>
+                    {% endif %}
+                </form>
+            </div>
+
+            <div class="card-body">
+                {% if messages %}
+                <div class="messages mb-4">
+                    {% for message in messages %}
+                    <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                {% if appointments %}
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Token</th>
+                                <th>Patient</th>
+                                <th>Time</th>
+                                <th>Status</th>
+                                <th>Prescription</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for appointment in appointments %}
+                            <tr>
+                                <td>#{{ appointment.token_number }}</td>
+                                <td>
+                                    <strong>{{ appointment.patient.get_full_name }}</strong><br>
+                                    <small class="text-muted">
+                                        {% if appointment.patient.patient %}
+                                            {{ appointment.patient.patient.date_of_birth|timesince }} old •
+                                            {{ appointment.patient.patient.gender }}
+                                        {% else %}
+                                            Patient details not available
+                                        {% endif %}
+                                    </small>
+                                </td>
+                                <td>{{ appointment.estimated_time|time:"g:i A" }}</td>
+                                <td>
+                                    <span class="badge bg-{% if appointment.status == 'scheduled' %}primary{% elif appointment.status == 'completed' %}success{% else %}danger{% endif %}">
+                                        {{ appointment.status|title }}
+                                    </span>
+                                </td>
+                                <td>
+                                    {% comment %} FIXED: Check if prescription exists {% endcomment %}
+                                    {% if appointment.prescription %}
+                                        <span class="badge bg-success">
+                                            <i class="fas fa-prescription"></i> Prescribed
+                                        </span>
+                                        <br>
+                                        <small class="text-muted">Updated: {{ appointment.prescription.updated_at|date:"M d, H:i" }}</small>
+                                    {% else %}
+                                        <span class="badge bg-secondary">No Prescription</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        <!-- Prescribe Medicine Button - Show for all dates but disable for future -->
+                                        <button type="button" class="btn btn-outline-primary prescribe-btn"
+                                                data-appointment-id="{{ appointment.id }}"
+                                                data-patient-name="{{ appointment.patient.get_full_name }}"
+                                                data-appointment-date="{{ appointment.appointment_date|date:'M d, Y' }}"
+                                                {% if appointment.appointment_date > today %}disabled title="Can only prescribe for today or previous days"{% endif %}>
+                                            <i class="fas fa-prescription"></i> Prescribe
+                                        </button>
+
+                                        <!-- Complete Appointment Button - Only for scheduled appointments on today or past dates -->
+                                        {% if appointment.status == 'scheduled' and appointment.appointment_date <= today %}
+                                        <form method="post" action="{% url 'complete_appointment' appointment.id %}" style="display: inline;">
+                                            {% csrf_token %}
+                                            <button type="submit" class="btn btn-outline-success"
+                                                    onclick="return confirm('Mark this appointment as completed?')">
+                                                <i class="fas fa-check"></i> Complete
+                                            </button>
+                                        </form>
+                                        {% endif %}
+
+                                        <!-- Revert to Scheduled Button - Only for completed appointments -->
+                                        {% if appointment.status == 'completed' %}
+                                        <form method="post" action="{% url 'revert_appointment' appointment.id %}" style="display: inline;">
+                                            {% csrf_token %}
+                                            <button type="submit" class="btn btn-outline-warning"
+                                                    onclick="return confirm('Revert this appointment to scheduled?')">
+                                                <i class="fas fa-undo"></i> Revert
+                                            </button>
+                                        </form>
+                                        {% endif %}
+
+                                        <!-- View Prescription Button -->
+                                        {% if appointment.has_prescription %}
+                                        <button type="button" class="btn btn-outline-info view-prescription-btn"
+                                                data-appointment-id="{{ appointment.id }}"
+                                                data-patient-name="{{ appointment.patient.get_full_name }}">
+                                            <i class="fas fa-eye"></i> View
+                                        </button>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <h5 class="text-muted">No appointments for {{ selected_date|date:"F d, Y" }}</h5>
+                    <p class="text-muted">Select a different date to view appointments.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Prescription Modal -->
+<div class="modal fade" id="prescriptionModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="prescriptionModalLabel">Prescribe Medicine</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p><strong>Patient:</strong> <span id="prescriptionPatientName"></span></p>
+                <p><strong>Appointment Date:</strong> <span id="prescriptionAppointmentDate"></span></p>
+                <form id="prescriptionForm">
+                    {% csrf_token %}
+                    <input type="hidden" id="prescriptionAppointmentId" name="appointment_id">
+                    <div class="mb-3">
+                        <label for="prescriptionText" class="form-label">Prescription Details</label>
+                        <textarea class="form-control" id="prescriptionText" name="prescription_text"
+                                  rows="12" placeholder="Enter prescription details, medications, dosage, instructions..."></textarea>
+                        <div class="form-text">
+                            Include medications, dosage, frequency, duration, and any special instructions.
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="savePrescriptionBtn">
+                    <i class="fas fa-save"></i> Save Prescription
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+console.log("Prescription script loading");
+
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM loaded - initializing prescription modal'); // Debug
+
+    const prescriptionModal = new bootstrap.Modal(document.getElementById('prescriptionModal'));
+    const prescriptionForm = document.getElementById('prescriptionForm');
+    const savePrescriptionBtn = document.getElementById('savePrescriptionBtn');
+
+    // Debug: Check if elements exist
+    console.log('Modal element:', document.getElementById('prescriptionModal'));
+    console.log('Form element:', prescriptionForm);
+    console.log('Save button:', savePrescriptionBtn);
+    console.log('Prescribe buttons:', document.querySelectorAll('.prescribe-btn').length);
+
+    // Improved event delegation for prescribe buttons
+    document.addEventListener('click', function(e) {
+        // Check if clicked element is a prescribe button or inside one
+        const prescribeBtn = e.target.closest('.prescribe-btn');
+        if (prescribeBtn && !prescribeBtn.disabled) {
+            e.preventDefault();
+            console.log('Prescribe button clicked via delegation'); // Debug
+
+            const appointmentId = prescribeBtn.dataset.appointmentId;
+            const patientName = prescribeBtn.dataset.patientName;
+            const appointmentDate = prescribeBtn.dataset.appointmentDate;
+
+            console.log('Appointment ID:', appointmentId, 'Patient:', patientName); // Debug
+
+            // Set modal content
+            document.getElementById('prescriptionPatientName').textContent = patientName;
+            document.getElementById('prescriptionAppointmentDate').textContent = appointmentDate;
+            document.getElementById('prescriptionAppointmentId').value = appointmentId;
+
+            // Load existing prescription
+            console.log('Fetching prescription for appointment:', appointmentId); // Debug
+            fetch(`/prescriptions/${appointmentId}/`)
+                .then(response => {
+                    console.log('Prescription fetch response status:', response.status); // Debug
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('Prescription data received:', data); // Debug
+                    document.getElementById('prescriptionText').value = data.prescription_text || '';
+
+                    // Show modal after content is loaded
+                    prescriptionModal.show();
+                })
+                .catch(error => {
+                    console.error('Error loading prescription:', error);
+                    document.getElementById('prescriptionText').value = '';
+                    // Show modal even if there's an error
+                    prescriptionModal.show();
+                });
+        }
+
+        // Handle view prescription buttons
+        const viewPrescribeBtn = e.target.closest('.view-prescription-btn');
+        if (viewPrescribeBtn) {
+            e.preventDefault();
+            console.log('View prescription button clicked'); // Debug
+
+            const appointmentId = viewPrescribeBtn.dataset.appointmentId;
+            const patientName = viewPrescribeBtn.dataset.patientName;
+            const appointmentDate = prescribeBtn.dataset.appointmentDate;
+
+            document.getElementById('prescriptionPatientName').textContent = patientName;
+            document.getElementById('prescriptionAppointmentDate').textContent = appointmentDate;
+            document.getElementById('prescriptionAppointmentId').value = appointmentId;
+
+            fetch(`/prescriptions/${appointmentId}/`)
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('prescriptionText').value = data.prescription_text || '';
+                    document.getElementById('prescriptionText').readOnly = true;
+                    savePrescriptionBtn.style.display = 'none';
+                    prescriptionModal.show();
+                })
+                .catch(error => {
+                    console.error('Error loading prescription:', error);
+                    prescriptionModal.show();
+                });
+        }
+    });
+
+    // Save prescription
+    if (savePrescriptionBtn) {
+        savePrescriptionBtn.addEventListener('click', function() {
+            console.log('Save prescription button clicked'); // Debug
+
+            const formData = new FormData(prescriptionForm);
+            const appointmentId = document.getElementById('prescriptionAppointmentId').value;
+
+            console.log('Saving prescription for appointment:', appointmentId); // Debug
+
+            fetch('/prescriptions/add/', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                }
+            })
+            .then(response => {
+                console.log('Save response status:', response.status); // Debug
+                return response.json();
+            })
+            .then(data => {
+                console.log('Save response data:', data); // Debug
+                if (data.success) {
+                    alert('Prescription saved successfully!');
+                    prescriptionModal.hide();
+                    location.reload();
+                } else {
+                    alert('Error: ' + (data.error || 'Unknown error'));
+                }
+            })
+            .catch(error => {
+                console.error('Error saving prescription:', error);
+                alert('Error saving prescription. Please try again.');
+            });
+        });
+    }
+
+    // Reset modal when closed
+    const modalElement = document.getElementById('prescriptionModal');
+    if (modalElement) {
+        modalElement.addEventListener('hidden.bs.modal', function() {
+            document.getElementById('prescriptionText').value = '';
+            document.getElementById('prescriptionText').readOnly = false;
+            if (savePrescriptionBtn) {
+                savePrescriptionBtn.style.display = 'block';
+            }
+        });
+    }
+});
+</script>
 {% endblock %}

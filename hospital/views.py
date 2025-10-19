@@ -8,7 +8,7 @@ from django.contrib.auth import login, authenticate, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 
-from hospital.models import Doctor, Appointment
+from hospital.models import Doctor, Appointment, Prescription
 from .forms import PatientRegistrationForm
 
 
@@ -108,11 +108,56 @@ def patient_dashboard(request):
 
 @login_required
 def doctor_dashboard(request):
+    """Doctor dashboard with appointment management"""
     if request.user.user_type != 'doctor':
         messages.error(request, 'Access denied.')
         return redirect('dashboard')
 
-    return render(request, 'doctor_dash.html', {'user': request.user})
+    # Get the doctor instance
+    try:
+        doctor = request.user.doctor
+    except Doctor.DoesNotExist:
+        messages.error(request, 'Doctor profile not found.')
+        return redirect('dashboard')
+
+    # Get selected date from request or default to today
+    selected_date_str = request.GET.get('date')
+    if selected_date_str:
+        try:
+            selected_date = datetime.strptime(selected_date_str, '%Y-%m-%d').date()
+        except ValueError:
+            selected_date = timezone.now().date()
+    else:
+        selected_date = timezone.now().date()
+
+    # OPTIMIZED: Prefetch prescriptions to avoid N+1 queries
+    appointments = Appointment.objects.filter(
+        doctor=doctor,
+        appointment_date=selected_date
+    ).select_related('patient', 'doctor').prefetch_related('prescription').order_by('token_number')
+
+    # Calculate statistics
+    today = timezone.now().date()
+
+    today_appointments = Appointment.objects.filter(
+        doctor=doctor,
+        appointment_date=today
+    )
+
+    today_appointments_count = today_appointments.filter(status='scheduled').count()
+    completed_today_count = today_appointments.filter(status='completed').count()
+
+    context = {
+        'doctor': doctor,
+        'appointments': appointments,
+        'selected_date': selected_date,
+        'today': today,
+        'today_appointments_count': today_appointments_count,
+        'completed_today_count': completed_today_count,
+        'min_date': timezone.now().date() - timedelta(days=30),
+        'max_date': timezone.now().date() + timedelta(days=30),
+    }
+    return render(request, 'doctor_dash.html', context)
 
 
 @login_required
@@ -272,3 +317,145 @@ def cancel_appointment(request, appointment_id):
 
     # If someone tries to access via GET, redirect to dashboard
     return redirect('patient_dashboard')
+
+
+@login_required
+def add_prescription(request):
+    """Add or edit prescription for an appointment - HANDLES BOTH GET AND POST"""
+    print("🟢 add_prescription view called")  # Debug
+
+    if request.user.user_type != 'doctor':
+        print("🔴 Access denied - not a doctor")  # Debug
+        return JsonResponse({'success': False, 'error': 'Access denied'})
+
+    if request.method == 'POST':
+        print("🟢 POST request received")  # Debug
+
+        try:
+            # Get data from POST request
+            appointment_id = request.POST.get('appointment_id')
+            prescription_text = request.POST.get('prescription_text', '').strip()
+
+            print(f"📋 Appointment ID: {appointment_id}")  # Debug
+            print(f"📋 Prescription text length: {len(prescription_text)}")  # Debug
+
+            if not appointment_id:
+                print("🔴 No appointment ID")  # Debug
+                return JsonResponse({'success': False, 'error': 'Appointment ID required'})
+
+            # Get appointment
+            try:
+                appointment = Appointment.objects.get(id=appointment_id, doctor=request.user.doctor)
+                print(f"✅ Found appointment: {appointment}")  # Debug
+            except Appointment.DoesNotExist:
+                print("🔴 Appointment not found")  # Debug
+                return JsonResponse({'success': False, 'error': 'Appointment not found'})
+
+            # Check if prescription is allowed
+            if not appointment.can_prescribe():
+                print("🔴 Cannot prescribe for future appointment")  # Debug
+                return JsonResponse({'success': False, 'error': 'Cannot prescribe for future appointments'})
+
+            if not prescription_text:
+                print("🔴 Empty prescription text")  # Debug
+                return JsonResponse({'success': False, 'error': 'Prescription text is required'})
+
+            # Create or update prescription
+            try:
+                prescription = Prescription.objects.get(appointment=appointment)
+                print("🟡 Updating existing prescription")  # Debug
+                prescription.prescription_text = prescription_text
+                prescription.save()
+                created = False
+            except Prescription.DoesNotExist:
+                print("🟡 Creating new prescription")  # Debug
+                prescription = Prescription.objects.create(
+                    appointment=appointment,
+                    prescription_text=prescription_text
+                )
+                created = True
+
+            print("✅ Prescription saved successfully")  # Debug
+            return JsonResponse({
+                'success': True,
+                'message': 'Prescription saved successfully',
+                'created': created
+            })
+
+        except Exception as e:
+            print(f"🔴 Exception in view: {str(e)}")  # Debug
+            import traceback
+            traceback.print_exc()  # This will print full traceback to console
+            return JsonResponse({'success': False, 'error': f'Server error: {str(e)}'})
+
+    else:
+        # GET request - should not happen for this endpoint
+        print("🔴 GET request to POST-only endpoint")  # Debug
+        return JsonResponse({'success': False, 'error': 'Method not allowed'})
+
+
+@login_required
+def get_prescription(request, appointment_id):
+    """Get prescription for an appointment"""
+    print(f"🟢 get_prescription called for appointment {appointment_id}")
+
+    if request.user.user_type != 'doctor':
+        print("🔴 Access denied - not a doctor")
+        return JsonResponse({'error': 'Access denied'}, status=403)
+
+    try:
+        appointment = Appointment.objects.get(id=appointment_id, doctor=request.user.doctor)
+        print(f"✅ Found appointment: {appointment}")
+
+        try:
+            prescription = Prescription.objects.get(appointment=appointment)
+            print(f"✅ Found prescription: {prescription.prescription_text[:50]}...")  # First 50 chars
+            return JsonResponse({'prescription_text': prescription.prescription_text})
+
+        except Prescription.DoesNotExist:
+            print("🟡 No prescription found for this appointment")
+            return JsonResponse({'prescription_text': ''})
+
+    except Appointment.DoesNotExist:
+        print(f"🔴 Appointment {appointment_id} not found or not owned by doctor")
+        return JsonResponse({'error': 'Appointment not found'}, status=404)
+
+    except Exception as e:
+        print(f"🔴 Unexpected error: {str(e)}")
+        return JsonResponse({'error': 'Server error'}, status=500)
+
+
+@login_required
+def complete_appointment(request, appointment_id):
+    """Mark appointment as completed"""
+    if request.user.user_type != 'doctor':
+        messages.error(request, 'Access denied.')
+        return redirect('doctor_dashboard')
+
+    appointment = get_object_or_404(Appointment, id=appointment_id, doctor=request.user.doctor)
+
+    if appointment.complete_appointment():
+        messages.success(request, 'Appointment marked as completed.')
+    else:
+        messages.error(request, 'Could not complete appointment.')
+
+    return redirect('doctor_dashboard')
+
+
+@login_required
+def revert_appointment(request, appointment_id):
+    """Revert completed appointment back to scheduled"""
+    if request.user.user_type != 'doctor':
+        messages.error(request, 'Access denied.')
+        return redirect('doctor_dashboard')
+
+    appointment = get_object_or_404(Appointment, id=appointment_id, doctor=request.user.doctor)
+
+    if appointment.status == 'completed':
+        appointment.status = 'scheduled'
+        appointment.save()
+        messages.success(request, 'Appointment reverted to scheduled status.')
+    else:
+        messages.error(request, 'Can only revert completed appointments.')
+
+    return redirect('doctor_dashboard')

@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from hospital.models import Doctor, Patient, User, Appointment
+from hospital.models import Doctor, Patient, User, Appointment, Prescription
 
 
 # Register your models here.
@@ -35,3 +35,10 @@ class AppointmentAdmin(admin.ModelAdmin):
         return f"Dr. {obj.doctor.user.get_full_name()}"
 
     get_doctor_name.short_description = 'Doctor'
+
+
+@admin.register(Prescription)
+class PrescriptionAdmin(admin.ModelAdmin):
+    list_display = ('appointment', 'created_at', 'updated_at')
+    list_filter = ('created_at',)
+    search_fields = ('appointment__patient__user__first_name', 'appointment__patient__user__last_name')

@@ -20,8 +20,14 @@ class User(AbstractUser):
 
 
 class Patient(models.Model):
+    GENDER_CHOICES = (
+        ('male', 'Male'),
+        ('female', 'Female'),
+        ('other', 'Other'),
+    )
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     date_of_birth = models.DateField()
+    gender = models.CharField(max_length=10, choices=GENDER_CHOICES, default='Male')
     address = models.TextField()
     emergency_contact = models.CharField(max_length=10)
 
@@ -128,8 +134,45 @@ class Appointment(models.Model):
             return True
         return False
 
+    def can_prescribe(self):
+        """Check if doctor can prescribe medicine for this appointment"""
+        from django.utils import timezone
+        today = timezone.now().date()
+        # Allow prescription for today or previous days
+        return self.appointment_date <= today
+
+    def complete_appointment(self):
+        """Mark appointment as completed"""
+        if self.status == 'scheduled':
+            self.status = 'completed'
+            self.save()
+            return True
+        return False
+
+    def can_complete(self):
+        """Check if appointment can be completed"""
+        from django.utils import timezone
+        today = timezone.now().date()
+        # Can complete scheduled appointments for today or past dates
+        return self.status == 'scheduled' and self.appointment_date <= today
+
+    def can_revert(self):
+        """Check if appointment can be reverted"""
+        # Can revert completed appointments
+        return self.status == 'completed'
+
     def __str__(self):
         return f"Token #{self.token_number} - {self.patient.username} at {self.estimated_time.strftime('%H:%M')}"
 
     class Meta:
         ordering = ['appointment_date', 'doctor', 'token_number']
+
+
+class Prescription(models.Model):
+    appointment = models.OneToOneField(Appointment, on_delete=models.CASCADE)
+    prescription_text = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"Prescription for {self.appointment.patient.get_full_name()}"
