@@ -27,6 +27,7 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
+LOGIN_URL = 'login'
 AUTH_USER_MODEL = 'hospital.User'
 # Application definition
 
