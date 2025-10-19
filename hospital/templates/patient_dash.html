@@ -27,6 +27,7 @@
                         <thead>
                             <tr>
                                 <th>Doctor</th>
+                                <th>Toekn</th>
                                 <th>Date</th>
                                 <th>Time</th>
                                 <th>Status</th>
@@ -37,8 +38,9 @@
                             {% for appointment in appointments %}
                             <tr>
                                 <td>Dr. {{ appointment.doctor.user.get_full_name }}</td>
+                                <td>#{{ appointment.token_number }}</td>
                                 <td>{{ appointment.appointment_date }}</td>
-                                <td>{{ appointment.appointment_time|time:"g:i A" }}</td>
+                                <td>{{ appointment.estimated_time|time:"g:i A" }}</td>
                                 <td>
                                     <span class="badge bg-{% if appointment.status == 'scheduled' %}primary{% elif appointment.status == 'completed' %}success{% else %}danger{% endif %}">
                                         {{ appointment.status|title }}
