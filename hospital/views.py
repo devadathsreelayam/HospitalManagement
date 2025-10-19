@@ -88,12 +88,19 @@ def patient_dashboard(request):
         return redirect('dashboard')
 
     # Get patient's appointments
-    from .models import Appointment
-    appointments = Appointment.objects.filter(patient=request.user).order_by('-appointment_date')
+    appointments = Appointment.objects.filter(patient=request.user).order_by('-appointment_date', 'token_number')
+
+    # Calculate counts
+    total_appointments = appointments.count()
+    scheduled_appointments = appointments.filter(status='scheduled').count()
+    completed_appointments = appointments.filter(status='completed').count()
 
     context = {
         'appointments': appointments,
-        'patient': request.user.patient  # Access patient profile
+        'today': timezone.now().date(),
+        'total_appointments': total_appointments,
+        'scheduled_appointments': scheduled_appointments,
+        'completed_appointments': completed_appointments,
     }
 
     return render(request, 'patient_dash.html', context)
@@ -247,3 +254,21 @@ def appointment_success(request, appointment_id):
         'appointment': appointment
     }
     return render(request, 'appointment_success.html', context)
+
+
+@login_required
+def cancel_appointment(request, appointment_id):
+    """Cancel an appointment"""
+    appointment = get_object_or_404(Appointment, id=appointment_id, patient=request.user)
+
+    if request.method == 'POST':
+        if appointment.cancel():
+            messages.success(request, 'Appointment cancelled successfully!')
+        else:
+            messages.error(request,
+                           'Cannot cancel this appointment. It may be too close to the appointment time or already completed/cancelled.')
+
+        return redirect('patient_dashboard')
+
+    # If someone tries to access via GET, redirect to dashboard
+    return redirect('patient_dashboard')

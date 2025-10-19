@@ -1,67 +1,102 @@
 {% extends 'base.html' %}
 {% block content %}
-    <div class="row">
-        <div class="col-md-12">
-            <h2>Welcome, {{ user.get_full_name }}</h2>
-            <p class="text-muted">Patient Dashboard</p>
-        </div>
+<div class="row">
+    <div class="col-md-12">
+        <h2>Welcome, {{ user.get_full_name }}</h2>
+        <p class="text-muted">Patient Dashboard</p>
     </div>
+</div>
 
-    <div class="row mt-4">
-        <div class="col-md-4">
-            <div class="card text-center">
-                <div class="card-body">
-                    <h3>{{ appointments.count }}</h3>
-                    <p class="text-muted">Total Appointments</p>
-                </div>
+<div class="row mt-4">
+    <div class="col-md-4">
+        <div class="card text-center">
+            <div class="card-body">
+                <h3>{{ total_appointments }}</h3>
+                <p class="text-muted">Total Appointments</p>
             </div>
         </div>
     </div>
-
-    <div class="row mt-4">
-        <div class="col-md-12">
-            <h4>Your Appointments</h4>
-            {% if appointments %}
-                <div class="table-responsive">
-                    <table class="table table-striped">
-                        <thead>
-                            <tr>
-                                <th>Doctor</th>
-                                <th>Toekn</th>
-                                <th>Date</th>
-                                <th>Time</th>
-                                <th>Status</th>
-                                <th>Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for appointment in appointments %}
-                            <tr>
-                                <td>Dr. {{ appointment.doctor.user.get_full_name }}</td>
-                                <td>#{{ appointment.token_number }}</td>
-                                <td>{{ appointment.appointment_date }}</td>
-                                <td>{{ appointment.estimated_time|time:"g:i A" }}</td>
-                                <td>
-                                    <span class="badge bg-{% if appointment.status == 'scheduled' %}primary{% elif appointment.status == 'completed' %}success{% else %}danger{% endif %}">
-                                        {{ appointment.status|title }}
-                                    </span>
-                                </td>
-                                <td>
-                                    {% if appointment.status == 'scheduled' %}
-                                    <a href="#" class="btn btn-sm btn-outline-danger">Cancel</a>
-                                    {% endif %}
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            {% else %}
-                <div class="alert alert-info">
-                    <p>You don't have any appointments yet.</p>
-                    <a href="{% url 'view_doctors' %}" class="btn btn-primary">Book Your First Appointment</a>
-                </div>
-            {% endif %}
+    <div class="col-md-4">
+        <div class="card text-center">
+            <div class="card-body">
+                <h3>{{ scheduled_appointments }}</h3>
+                <p class="text-muted">Upcoming</p>
+            </div>
         </div>
     </div>
+    <div class="col-md-4">
+        <div class="card text-center">
+            <div class="card-body">
+                <h3>{{ completed_appointments }}</h3>
+                <p class="text-muted">Completed</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Rest of the template remains the same -->
+<div class="row mt-4">
+    <div class="col-md-12">
+        <h4>Your Appointments</h4>
+
+        {% if appointments %}
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Doctor</th>
+                            <th>Date</th>
+                            <th>Estimated Time</th>
+                            <th>Token</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for appointment in appointments %}
+                        <tr>
+                            <td>Dr. {{ appointment.doctor.user.get_full_name }}</td>
+                            <td>
+                                {{ appointment.appointment_date }}
+                                {% if appointment.appointment_date == today %}
+                                <span class="badge bg-warning">Today</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ appointment.estimated_time|time:"g:i A" }}</td>
+                            <td>#{{ appointment.token_number }}</td>
+                            <td>
+                                <span class="badge bg-{% if appointment.status == 'scheduled' %}primary{% elif appointment.status == 'completed' %}success{% else %}danger{% endif %}">
+                                    {{ appointment.status|title }}
+                                </span>
+                            </td>
+                            <td>
+                                {% if appointment.status == 'scheduled' and appointment.can_cancel %}
+                                <form method="post" action="{% url 'cancel_appointment' appointment.id %}" style="display: inline;">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-sm btn-outline-danger"
+                                            onclick="return confirm('Are you sure you want to cancel this appointment?')">
+                                        Cancel
+                                    </button>
+                                </form>
+                                {% elif appointment.status == 'scheduled' %}
+                                <button class="btn btn-sm btn-outline-secondary" disabled title="Cannot cancel within 2 hours of appointment">
+                                    Cancel
+                                </button>
+                                {% else %}
+                                <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="alert alert-info">
+                <p>You don't have any appointments yet.</p>
+                <a href="{% url 'view_doctors' %}" class="btn btn-primary">Book Your First Appointment</a>
+            </div>
+        {% endif %}
+    </div>
+</div>
 {% endblock %}

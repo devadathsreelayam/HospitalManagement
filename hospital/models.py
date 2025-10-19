@@ -102,6 +102,32 @@ class Appointment(models.Model):
             estimated_datetime = start_datetime + timedelta(minutes=(self.token_number - 1) * 10)
             return estimated_datetime.time()
 
+    def can_cancel(self):
+        """Check if appointment can be cancelled"""
+        from django.utils import timezone
+        from datetime import timedelta
+
+        # Can only cancel scheduled appointments
+        if self.status != 'scheduled':
+            return False
+
+        # Check if appointment is at least 2 hours away
+        appointment_datetime = timezone.make_aware(
+            datetime.combine(self.appointment_date, self.estimated_time)
+        )
+        current_time = timezone.now()
+
+        # Allow cancellation if more than 2 hours before appointment
+        return (appointment_datetime - current_time) > timedelta(hours=2)
+
+    def cancel(self):
+        """Cancel the appointment"""
+        if self.can_cancel():
+            self.status = 'cancelled'
+            self.save()
+            return True
+        return False
+
     def __str__(self):
         return f"Token #{self.token_number} - {self.patient.username} at {self.estimated_time.strftime('%H:%M')}"
 
