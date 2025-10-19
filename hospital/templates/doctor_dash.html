@@ -116,6 +116,14 @@
                                 </td>
                                 <td>
                                     <div class="btn-group btn-group-sm">
+                                        <!-- View Reason Button -->
+                                        <button type="button" class="btn btn-outline-secondary view-reason-btn"
+                                                data-reason="{{ appointment.reason|escapejs }}"
+                                                data-patient-name="{{ appointment.patient.get_full_name }}"
+                                                title="View appointment reason">
+                                            <i class="fas fa-sticky-note"></i> Reason
+                                        </button>
+
                                         <!-- Prescribe Medicine Button - Show for all dates but disable for future -->
                                         <button type="button" class="btn btn-outline-primary prescribe-btn"
                                                 data-appointment-id="{{ appointment.id }}"
@@ -202,6 +210,30 @@
                 <button type="button" class="btn btn-primary" id="savePrescriptionBtn">
                     <i class="fas fa-save"></i> Save Prescription
                 </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Reason View Modal -->
+<div class="modal fade" id="reasonModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Appointment Reason</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p><strong>Patient:</strong> <span id="reasonPatientName"></span></p>
+                <div class="mb-3">
+                    <label class="form-label"><strong>Reason for Visit:</strong></label>
+                    <div class="border p-3 bg-light rounded" id="reasonText" style="min-height: 100px;">
+                        <!-- Reason will be inserted here -->
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
             </div>
         </div>
     </div>
@@ -348,6 +380,30 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
+});
+
+// Reason view
+document.addEventListener('DOMContentLoaded', function() {
+    const reasonModal = new bootstrap.Modal(document.getElementById('reasonModal'));
+
+    // View reason button handler
+    document.querySelectorAll('.view-reason-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            const reason = this.dataset.reason;
+            const patientName = this.dataset.patientName;
+
+            document.getElementById('reasonPatientName').textContent = patientName;
+
+            // Handle empty reason
+            if (reason && reason.trim() !== '') {
+                document.getElementById('reasonText').textContent = reason;
+            } else {
+                document.getElementById('reasonText').textContent = 'No reason provided.';
+            }
+
+            reasonModal.show();
+        });
+    });
 });
 </script>
 {% endblock %}
