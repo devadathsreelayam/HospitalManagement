@@ -28,6 +28,7 @@ urlpatterns = [
     path('patient/medical-history/doctor/<int:doctor_id>/', views.patient_doctor_history, name='patient_doctor_history'),
     path('lab-report/upload/<int:patient_id>/', views.upload_lab_report, name='upload_lab_report'),
     path('lab-report/delete/<int:report_id>/', views.delete_lab_report, name='delete_lab_report'),
+    path('patient/lab-reports/', views.patient_lab_reports, name='patient_lab_reports'),
 ]
 
 if settings.DEBUG:

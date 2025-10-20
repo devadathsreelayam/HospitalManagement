@@ -757,3 +757,29 @@ def delete_lab_report(request, report_id):
         return redirect('patient_history', patient_id=patient_id)
 
     return redirect('doctor_dashboard')
+
+
+@login_required
+def patient_lab_reports(request):
+    """Patient view all their lab reports"""
+    if request.user.user_type != 'patient':
+        messages.error(request, 'Access denied.')
+        return redirect('dashboard')
+
+    # Get all lab reports for this patient
+    lab_reports = LabReport.objects.filter(
+        appointment__patient=request.user
+    ).select_related('appointment', 'appointment__doctor', 'appointment__doctor__user').order_by('-uploaded_at')
+
+    # Calculate statistics
+    total_reports = lab_reports.count()
+    unique_doctors = lab_reports.values('appointment__doctor').distinct().count()
+    latest_report = lab_reports.first()
+
+    context = {
+        'lab_reports': lab_reports,
+        'total_reports': total_reports,
+        'unique_doctors': unique_doctors,
+        'latest_report': latest_report,
+    }
+    return render(request, 'patient_lab_reports.html', context)
