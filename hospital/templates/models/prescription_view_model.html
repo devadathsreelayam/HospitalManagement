@@ -1,0 +1,83 @@
+<!-- PRESCRIPTION VIEW MODAL (Read-only) -->
+<div class="modal fade" id="prescriptionModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Prescription Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <p><strong>Patient:</strong> <span id="prescriptionPatientName"></span></p>
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>Appointment Date:</strong> <span id="prescriptionAppointmentDate"></span></p>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label"><strong>Prescription:</strong></label>
+                    <div class="border p-3 bg-light rounded">
+                        <pre id="prescriptionText" style="white-space: pre-wrap; font-family: inherit; margin: 0;"></pre>
+                    </div>
+                </div>
+                <div class="row text-muted small">
+                    <div class="col-md-6">
+                        <strong>Created:</strong> <span id="prescriptionCreatedAt"></span>
+                    </div>
+                    <div class="col-md-6">
+                        <strong>Last Updated:</strong> <span id="prescriptionUpdatedAt"></span>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const prescriptionModal = new bootstrap.Modal(document.getElementById('prescriptionModal'));
+
+    // View Prescription Button Handler (Read-only)
+    document.querySelectorAll('.view-prescription-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            const appointmentId = this.dataset.appointmentId;
+            const patientName = this.dataset.patientName;
+            const appointmentDate = this.dataset.appointmentDate;
+
+            document.getElementById('prescriptionPatientName').textContent = patientName;
+            document.getElementById('prescriptionAppointmentDate').textContent = appointmentDate;
+
+            // Load prescription data
+            fetch(`/prescriptions/${appointmentId}/`)
+                .then(response => response.json())
+                .then(data => {
+                    const prescriptionText = document.getElementById('prescriptionText');
+                    if (data.prescription_text && data.prescription_text.trim() !== '') {
+                        prescriptionText.textContent = data.prescription_text;
+                    } else {
+                        prescriptionText.textContent = 'No prescription details available.';
+                    }
+
+                    // Show timestamps if available
+                    if (data.created_at) {
+                        document.getElementById('prescriptionCreatedAt').textContent = new Date(data.created_at).toLocaleString();
+                    }
+                    if (data.updated_at) {
+                        document.getElementById('prescriptionUpdatedAt').textContent = new Date(data.updated_at).toLocaleString();
+                    }
+
+                    prescriptionModal.show();
+                })
+                .catch(error => {
+                    console.error('Error loading prescription:', error);
+                    document.getElementById('prescriptionText').textContent = 'Error loading prescription.';
+                    prescriptionModal.show();
+                });
+        });
+    });
+});
+</script>

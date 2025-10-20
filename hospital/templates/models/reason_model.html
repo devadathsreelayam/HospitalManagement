@@ -1,0 +1,53 @@
+<div class="modal fade" id="reasonModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Appointment Reason</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p><strong>Patient:</strong> <span id="reasonPatientName"></span></p>
+                <p><strong>Date:</strong> <span id="reasonAppointmentDate"></span></p>
+                <div class="mb-3">
+                    <label class="form-label"><strong>Reason for Visit:</strong></label>
+                    <div class="border p-3 bg-light rounded" id="reasonText" style="min-height: 100px;">
+                        <!-- Reason will be inserted here -->
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Reason Modal
+        const reasonModal = new bootstrap.Modal(document.getElementById('reasonModal'));
+
+        // Prescription Modal
+        const prescriptionModal = new bootstrap.Modal(document.getElementById('prescriptionModal'));
+
+        // View Reason Button Handler
+        document.querySelectorAll('.view-reason-btn').forEach(button => {
+            button.addEventListener('click', function () {
+                const reason = this.dataset.reason;
+                const patientName = '{{ patient_user.get_full_name|default:request.user.get_full_name }}';
+                const appointmentDate = this.dataset.date;
+
+                document.getElementById('reasonPatientName').textContent = patientName;
+                document.getElementById('reasonAppointmentDate').textContent = appointmentDate;
+
+                if (reason && reason.trim() !== '') {
+                    document.getElementById('reasonText').textContent = reason;
+                } else {
+                    document.getElementById('reasonText').textContent = 'No reason provided.';
+                }
+
+                reasonModal.show();
+            });
+        });
+    });
+</script>
