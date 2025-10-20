@@ -8,7 +8,7 @@ from django.contrib.auth import login, authenticate, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 
-from hospital.models import Doctor, Appointment, Prescription, User
+from hospital.models import Doctor, Appointment, Prescription, User, Patient
 from .forms import PatientRegistrationForm
 
 
@@ -551,11 +551,15 @@ def patient_history(request, patient_id):
             doctor=request.user.doctor
         ).select_related('prescription').order_by('-appointment_date', '-created_at')
 
+        # Get return date from URL parameters or default to today
+        return_date = request.GET.get('return_date', timezone.now().date().strftime('%Y-%m-%d'))
+
         context = {
             'patient_user': patient_user,
             'patient_profile': patient_profile,
             'appointments': appointments,
             'doctor': request.user.doctor,
+            'return_date': return_date,  # Pass this to template
         }
         return render(request, 'patient_history.html', context)
 
