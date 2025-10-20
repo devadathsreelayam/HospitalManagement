@@ -9,7 +9,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 
 from hospital.models import Doctor, Appointment, Prescription, User, Patient, LabReport
-from .forms import PatientRegistrationForm, LabReportForm
+from .forms import PatientRegistrationForm, LabReportForm, PatientProfileUpdateForm
 
 
 def index(request):
@@ -799,3 +799,32 @@ def patient_lab_reports(request):
         'latest_report': latest_report,
     }
     return render(request, 'patient_lab_reports.html', context)
+
+
+@login_required
+def patient_profile_update(request):
+    """Update patient profile information"""
+    if request.user.user_type != 'patient':
+        messages.error(request, 'Access denied.')
+        return redirect('dashboard')
+
+    try:
+        patient_profile = request.user.patient
+    except Patient.DoesNotExist:
+        messages.error(request, 'Patient profile not found.')
+        return redirect('patient_dashboard')
+
+    if request.method == 'POST':
+        form = PatientProfileUpdateForm(request.POST, instance=patient_profile, user=request.user)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Your profile has been updated successfully!')
+            return redirect('dashboard')
+    else:
+        form = PatientProfileUpdateForm(instance=patient_profile, user=request.user)
+
+    context = {
+        'form': form,
+        'patient_profile': patient_profile,
+    }
+    return render(request, 'patient_profile_update.html', context)

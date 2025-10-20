@@ -93,6 +93,80 @@ class PatientRegistrationForm(UserCreationForm):
         return emergency_contact
 
 
+class PatientProfileUpdateForm(forms.ModelForm):
+    first_name = forms.CharField(
+        max_length=30,
+        required=True,
+        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter your first name'})
+    )
+    last_name = forms.CharField(
+        max_length=30,
+        required=True,
+        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter your last name'})
+    )
+    email = forms.EmailField(
+        required=True,
+        widget=forms.EmailInput(attrs={'class': 'form-control', 'placeholder': 'Enter your email address'})
+    )
+    phone = forms.CharField(
+        max_length=10,
+        required=True,
+        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter 10-digit phone number'})
+    )
+
+    class Meta:
+        model = Patient
+        fields = ['date_of_birth', 'gender', 'address', 'emergency_contact']
+        widgets = {
+            'date_of_birth': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
+            'gender': forms.Select(attrs={'class': 'form-select'}),
+            'address': forms.Textarea(
+                attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'Enter your complete address'}),
+            'emergency_contact': forms.TextInput(
+                attrs={'class': 'form-control', 'placeholder': 'Emergency contact number'}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        self.user = kwargs.pop('user', None)
+        super().__init__(*args, **kwargs)
+
+        # Prepopulate user fields if user is provided
+        if self.user:
+            self.fields['first_name'].initial = self.user.first_name
+            self.fields['last_name'].initial = self.user.last_name
+            self.fields['email'].initial = self.user.email
+            self.fields['phone'].initial = self.user.phone
+
+    def clean_phone(self):
+        phone = self.cleaned_data.get('phone')
+        if phone and (len(phone) != 10 or not phone.isdigit()):
+            raise forms.ValidationError("Phone number must be exactly 10 digits.")
+        return phone
+
+    def clean_emergency_contact(self):
+        emergency_contact = self.cleaned_data.get('emergency_contact')
+        if emergency_contact and (len(emergency_contact) != 10 or not emergency_contact.isdigit()):
+            raise forms.ValidationError("Emergency contact must be exactly 10 digits.")
+        return emergency_contact
+
+    def save(self, commit=True):
+        patient = super().save(commit=False)
+
+        # Update user information
+        if self.user:
+            self.user.first_name = self.cleaned_data['first_name']
+            self.user.last_name = self.cleaned_data['last_name']
+            self.user.email = self.cleaned_data['email']
+            self.user.phone = self.cleaned_data['phone']
+            if commit:
+                self.user.save()
+
+        if commit:
+            patient.save()
+
+        return patient
+
+
 class LabReportForm(forms.ModelForm):
     class Meta:
         model = LabReport
