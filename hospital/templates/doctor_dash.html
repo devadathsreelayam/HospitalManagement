@@ -86,7 +86,7 @@
                             <tr>
                                 <td>#{{ appointment.token_number }}</td>
                                 <td>
-                                    <strong>{{ appointment.patient.get_full_name }}</strong><br>
+                                    <strong><a href="{% url 'patient_history' appointment.patient_id %}" id="newWindowLink"  style="text-decoration: none; color: inherit;">{{ appointment.patient.get_full_name }}</a></strong><br>
                                     <small class="text-muted">
                                         {% if appointment.patient.patient %}
                                             {{ appointment.patient.patient.date_of_birth|timesince }} old •
@@ -404,6 +404,11 @@ document.addEventListener('DOMContentLoaded', function() {
             reasonModal.show();
         });
     });
+});
+
+document.getElementById('newWindowLink').addEventListener('click', function(e) {
+    e.preventDefault();
+    window.open(this.href, 'newwindow', 'width=800,height=600,scrollbars=yes');
 });
 </script>
 {% endblock %}

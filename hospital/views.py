@@ -8,7 +8,7 @@ from django.contrib.auth import login, authenticate, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 
-from hospital.models import Doctor, Appointment, Prescription
+from hospital.models import Doctor, Appointment, Prescription, User
 from .forms import PatientRegistrationForm
 
 
@@ -459,3 +459,109 @@ def revert_appointment(request, appointment_id):
         messages.error(request, 'Can only revert completed appointments.')
 
     return redirect('doctor_dashboard')
+
+
+@login_required
+def patient_appointment_history(request, patient_id=None, doctor_id=None):
+    """
+    Unified view for patient history
+    - For doctors: view patient's history with them
+    - For patients: view their own history with specific doctor or all doctors
+    """
+    context = {}
+
+    if request.user.user_type == 'doctor':
+        # Doctor viewing patient's history
+        if not patient_id:
+            messages.error(request, 'Patient ID required.')
+            return redirect('doctor_dashboard')
+
+        try:
+            patient_user = User.objects.get(id=patient_id, user_type='patient')
+            patient_profile = patient_user.patient
+
+            # Get appointments between this patient and current doctor
+            appointments = Appointment.objects.filter(
+                patient=patient_user,
+                doctor=request.user.doctor
+            ).select_related('prescription').order_by('-appointment_date', '-created_at')
+
+            context.update({
+                'view_type': 'doctor_view',
+                'patient_user': patient_user,
+                'patient_profile': patient_profile,
+                'viewing_doctor': request.user.doctor,
+            })
+
+        except (User.DoesNotExist, Patient.DoesNotExist):
+            messages.error(request, 'Patient not found.')
+            return redirect('doctor_dashboard')
+
+    elif request.user.user_type == 'patient':
+        # Patient viewing their own history
+        if doctor_id:
+            # View history with specific doctor
+            try:
+                doctor = Doctor.objects.get(id=doctor_id)
+                appointments = Appointment.objects.filter(
+                    patient=request.user,
+                    doctor=doctor
+                ).select_related('prescription').order_by('-appointment_date', '-created_at')
+
+                context.update({
+                    'view_type': 'patient_doctor_view',
+                    'viewing_doctor': doctor,
+                })
+
+            except Doctor.DoesNotExist:
+                messages.error(request, 'Doctor not found.')
+                return redirect('patient_dashboard')
+        else:
+            # View all history across all doctors
+            appointments = Appointment.objects.filter(
+                patient=request.user
+            ).select_related('doctor', 'prescription', 'doctor__user').order_by('-appointment_date', '-created_at')
+
+            context.update({
+                'view_type': 'patient_all_view',
+            })
+    else:
+        messages.error(request, 'Access denied.')
+        return redirect('dashboard')
+
+    context['appointments'] = appointments
+    return render(request, 'patient_history.html', context)
+
+
+@login_required
+def patient_history(request, patient_id):
+    """View patient's appointment history and prescriptions"""
+    if request.user.user_type != 'doctor':
+        messages.error(request, 'Access denied.')
+        return redirect('doctor_dashboard')
+
+    try:
+        # Get patient user
+        patient_user = User.objects.get(id=patient_id, user_type='patient')
+        patient_profile = patient_user.patient
+
+        # Get all appointments for this patient with current doctor
+        appointments = Appointment.objects.filter(
+            patient=patient_user,
+            doctor=request.user.doctor
+        ).select_related('prescription').order_by('-appointment_date', '-created_at')
+
+        context = {
+            'patient_user': patient_user,
+            'patient_profile': patient_profile,
+            'appointments': appointments,
+            'doctor': request.user.doctor,
+        }
+        return render(request, 'patient_history.html', context)
+
+    except User.DoesNotExist:
+        messages.error(request, 'Patient not found.')
+        return redirect('doctor_dashboard')
+    except Patient.DoesNotExist:
+        messages.error(request, 'Patient profile not found.')
+        return redirect('doctor_dashboard')

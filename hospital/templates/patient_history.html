@@ -1,0 +1,108 @@
+<!-- templates/hospital/patient_history.html -->
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h2>Patient History</h2>
+                <p class="text-muted">
+                    {{ patient_user.get_full_name }} •
+                    {{ patient_profile.get_gender_display }} •
+                    {{ patient_profile.date_of_birth|timesince }} old
+                </p>
+            </div>
+            <a href="{% url 'doctor_dashboard' %}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> Back to Dashboard
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Appointment History</h5>
+            </div>
+            <div class="card-body">
+                {% if appointments %}
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Time</th>
+                                <th>Token</th>
+                                <th>Status</th>
+                                <th>Reason</th>
+                                <th>Prescription</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for appointment in appointments %}
+                            <tr>
+                                <td>{{ appointment.appointment_date }}</td>
+                                <td>{{ appointment.estimated_time|time:"g:i A" }}</td>
+                                <td>#{{ appointment.token_number }}</td>
+                                <td>
+                                    <span class="badge bg-{% if appointment.status == 'scheduled' %}primary{% elif appointment.status == 'completed' %}success{% else %}danger{% endif %}">
+                                        {{ appointment.status|title }}
+                                    </span>
+                                </td>
+                                <td>
+                                    {% if appointment.reason %}
+                                    <button type="button" class="btn btn-sm btn-outline-info view-reason-btn"
+                                            data-reason="{{ appointment.reason|escapejs }}"
+                                            data-date="{{ appointment.appointment_date }}">
+                                        View Reason
+                                    </button>
+                                    {% else %}
+                                    <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if appointment.prescription %}
+                                    <span class="badge bg-success">Available</span>
+                                    {% else %}
+                                    <span class="badge bg-secondary">None</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if appointment.prescription %}
+                                    <button type="button" class="btn btn-sm btn-outline-primary view-prescription-btn"
+                                            data-appointment-id="{{ appointment.id }}"
+                                            data-patient-name="{{ patient_user.get_full_name }}"
+                                            data-appointment-date="{{ appointment.appointment_date|date:'M d, Y' }}">
+                                        View Prescription
+                                    </button>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <h5 class="text-muted">No appointment history found</h5>
+                    <p class="text-muted">This patient has no previous appointments with you.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Reuse the same modals from doctor dashboard -->
+{% include 'models/reason_model.html' %}
+{% include 'models/prescription_view_model.html' %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Reuse the same modal JavaScript from doctor dashboard
+</script>
+{% endblock %}

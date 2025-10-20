@@ -20,4 +20,5 @@ urlpatterns = [
     path('appointments/revert/<int:appointment_id>/', views.revert_appointment, name='revert_appointment'),
     path('prescriptions/add/', views.add_prescription, name='add_prescription'),
     path('prescriptions/<int:appointment_id>/', views.get_prescription, name='get_prescription'),
+    path('patient_history/<int:patient_id>', views.patient_history, name='patient_history'),
 ]
