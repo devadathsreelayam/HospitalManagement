@@ -189,6 +189,19 @@
                         </div>
                     </div>
 
+                    <!-- Gender Field -->
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Gender</label>
+                                {{ form.gender }}
+                                {% if form.gender.errors %}
+                                <div class="text-danger small">{{ form.gender.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="mb-4">
                         <label class="form-label fw-bold">Home Address</label>
                         <div class="input-group">
