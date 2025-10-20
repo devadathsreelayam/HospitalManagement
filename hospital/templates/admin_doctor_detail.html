@@ -1,0 +1,232 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h2 class="text-primary">Doctor Details</h2>
+                <p class="text-muted">Complete information about Dr. {{ doctor.user.get_full_name }}</p>
+            </div>
+            <div>
+                <a href="{% url 'admin_doctors_list' %}" class="btn btn-outline-secondary me-2">
+                    <i class="fas fa-arrow-left me-2"></i>Back to List
+                </a>
+                <a href="{% url 'admin_doctor_edit' doctor.id %}" class="btn btn-warning me-2">
+                    <i class="fas fa-edit me-2"></i>Edit
+                </a>
+                <form method="post" action="{% url 'admin_doctor_toggle_active' doctor.id %}" style="display: inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-{% if doctor.user.is_active %}danger{% else %}success{% endif %}">
+                        <i class="fas fa-{% if doctor.user.is_active %}times{% else %}check{% endif %} me-2"></i>
+                        {% if doctor.user.is_active %}Deactivate{% else %}Activate{% endif %}
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Doctor Information -->
+    <div class="col-md-4 mb-4">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-primary text-white">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-user-md me-2"></i>Basic Information
+                </h5>
+            </div>
+            <div class="card-body text-center">
+                <div class="doctor-avatar mb-3">
+                    <div class="avatar-circle-large mx-auto">
+                        <i class="fas fa-user-md fa-2x text-white"></i>
+                    </div>
+                </div>
+                <h4 class="text-primary">Dr. {{ doctor.user.get_full_name }}</h4>
+                <p class="text-muted mb-3">{{ doctor.qualification }}</p>
+
+                <div class="doctor-status mb-3">
+                    {% if doctor.user.is_active %}
+                    <span class="badge bg-success fs-6">Active</span>
+                    {% else %}
+                    <span class="badge bg-danger fs-6">Inactive</span>
+                    {% endif %}
+                </div>
+
+                <div class="doctor-specialization">
+                    <span class="badge bg-info fs-6">{{ doctor.get_specialization_display }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Contact Information -->
+        <div class="card border-0 shadow-sm mt-4">
+            <div class="card-header bg-info text-white">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-address-card me-2"></i>Contact Information
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="contact-item mb-3">
+                    <i class="fas fa-envelope text-primary me-2"></i>
+                    <strong>Email:</strong>
+                    <div class="text-muted">{{ doctor.user.email }}</div>
+                </div>
+                <div class="contact-item mb-3">
+                    <i class="fas fa-phone text-primary me-2"></i>
+                    <strong>Phone:</strong>
+                    <div class="text-muted">{{ doctor.user.phone }}</div>
+                </div>
+                <div class="contact-item mb-3">
+                    <i class="fas fa-user text-primary me-2"></i>
+                    <strong>Username:</strong>
+                    <div class="text-muted">@{{ doctor.user.username }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Professional Information -->
+    <div class="col-md-8 mb-4">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-success text-white">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-briefcase-medical me-2"></i>Professional Information
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <strong>Specialization:</strong>
+                        <div class="text-muted">{{ doctor.get_specialization_display }}</div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <strong>Qualification:</strong>
+                        <div class="text-muted">{{ doctor.qualification }}</div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <strong>Working Hours:</strong>
+                        <div class="text-muted">
+                            {{ doctor.start_time|time:"g:i A" }} - {{ doctor.end_time|time:"g:i A" }}
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <strong>Available Days:</strong>
+                        <div class="text-muted">{{ doctor.available_days|title }}</div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <strong>Max Daily Appointments:</strong>
+                        <div class="text-muted">{{ doctor.max_appointments }}</div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <strong>Account Created:</strong>
+                        <div class="text-muted">{{ doctor.user.date_joined|date:"M d, Y" }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Statistics -->
+        <div class="row mt-4">
+            <div class="col-md-4 mb-3">
+                <div class="card text-center border-0 shadow-sm">
+                    <div class="card-body">
+                        <i class="fas fa-calendar-check fa-2x text-primary mb-2"></i>
+                        <h3 class="text-primary">{{ total_appointments }}</h3>
+                        <p class="text-muted mb-0">Total Appointments</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-3">
+                <div class="card text-center border-0 shadow-sm">
+                    <div class="card-body">
+                        <i class="fas fa-check-circle fa-2x text-success mb-2"></i>
+                        <h3 class="text-success">{{ completed_appointments }}</h3>
+                        <p class="text-muted mb-0">Completed</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-3">
+                <div class="card text-center border-0 shadow-sm">
+                    <div class="card-body">
+                        <i class="fas fa-clock fa-2x text-warning mb-2"></i>
+                        <h3 class="text-warning">{{ today_appointments }}</h3>
+                        <p class="text-muted mb-0">Today's Appointments</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Appointments -->
+        <div class="card border-0 shadow-sm mt-4">
+            <div class="card-header bg-warning text-white">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-history me-2"></i>Recent Appointments
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if recent_appointments %}
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Patient</th>
+                                <th>Date</th>
+                                <th>Time</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for appointment in recent_appointments %}
+                            <tr>
+                                <td>{{ appointment.patient.get_full_name }}</td>
+                                <td>{{ appointment.appointment_date|date:"M d, Y" }}</td>
+                                <td>{{ appointment.estimated_time|time:"g:i A" }}</td>
+                                <td>
+                                    <span class="badge bg-{% if appointment.status == 'completed' %}success{% elif appointment.status == 'scheduled' %}primary{% else %}warning{% endif %}">
+                                        {{ appointment.status|title }}
+                                    </span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-3">
+                    <i class="fas fa-calendar-times fa-2x text-muted mb-2"></i>
+                    <p class="text-muted mb-0">No recent appointments</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.avatar-circle-large {
+    width: 100px;
+    height: 100px;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.avatar-circle-large i {
+    font-size: 2rem;
+    color: white;
+}
+
+.contact-item {
+    border-left: 3px solid #0dcaf0;
+    padding-left: 15px;
+}
+
+.card-header {
+    border-radius: 10px 10px 0 0 !important;
+}
+</style>
+{% endblock %}
