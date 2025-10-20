@@ -1,100 +1,352 @@
 {% extends 'base.html' %}
 {% block content %}
-    <div class="row justify-content-center">
-        <div class="col-md-8">
-            <div class="card">
-                <div class="card-header">
-                    <h4>Patient Registration</h4>
-                </div>
-                <div class="card-body">
-                    <form method="post">
-                        {% csrf_token %}
+<div class="row justify-content-center">
+    <div class="col-md-10 col-lg-8">
+        <!-- Header Section -->
+        <div class="text-center mb-5">
+            <div class="mb-4">
+                <i class="fas fa-user-plus fa-3x text-primary mb-3"></i>
+                <h2 class="text-primary">Create Your Medical Account</h2>
+                <p class="text-muted">Join our healthcare community and manage your medical appointments with ease</p>
+            </div>
+        </div>
 
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label class="form-label">Username</label>
+        <!-- Registration Card -->
+        <div class="card shadow-lg border-0">
+            <div class="card-header bg-primary text-white py-4">
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-hospital-user fa-2x me-3"></i>
+                    <div>
+                        <h4 class="mb-0">Patient Registration</h4>
+                        <small class="opacity-75">Fill in your details to get started</small>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-body p-5">
+                <form method="post" class="needs-validation" novalidate>
+                    {% csrf_token %}
+
+                    <!-- Account Information Section -->
+                    <div class="section-header mb-4">
+                        <h5 class="text-primary">
+                            <i class="fas fa-user-circle me-2"></i>
+                            Account Information
+                        </h5>
+                        <div class="border-bottom"></div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-4">
+                                <label class="form-label fw-bold">Username <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light">
+                                        <i class="fas fa-user text-muted"></i>
+                                    </span>
                                     {{ form.username }}
-                                    {% if form.username.errors %}
-                                    <div class="text-danger">{{ form.username.errors }}</div>
-                                    {% endif %}
                                 </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label class="form-label">Email</label>
-                                    {{ form.email }}
-                                    {% if form.email.errors %}
-                                    <div class="text-danger">{{ form.email.errors }}</div>
-                                    {% endif %}
+                                {% if form.username.errors %}
+                                <div class="text-danger small mt-1">
+                                    <i class="fas fa-exclamation-circle me-1"></i>
+                                    {{ form.username.errors }}
                                 </div>
+                                {% endif %}
+                                <div class="form-text">Choose a unique username for your account</div>
                             </div>
                         </div>
+                        <div class="col-md-6">
+                            <div class="mb-4">
+                                <label class="form-label fw-bold">Email Address <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light">
+                                        <i class="fas fa-envelope text-muted"></i>
+                                    </span>
+                                    {{ form.email }}
+                                </div>
+                                {% if form.email.errors %}
+                                <div class="text-danger small mt-1">
+                                    <i class="fas fa-exclamation-circle me-1"></i>
+                                    {{ form.email.errors }}
+                                </div>
+                                {% endif %}
+                                <div class="form-text">We'll never share your email with anyone else</div>
+                            </div>
+                        </div>
+                    </div>
 
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label class="form-label">First Name</label>
+                    <!-- Personal Information Section -->
+                    <div class="section-header mb-4 mt-4">
+                        <h5 class="text-primary">
+                            <i class="fas fa-id-card me-2"></i>
+                            Personal Information
+                        </h5>
+                        <div class="border-bottom"></div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-4">
+                                <label class="form-label fw-bold">First Name</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light">
+                                        <i class="fas fa-signature text-muted"></i>
+                                    </span>
                                     {{ form.first_name }}
                                 </div>
                             </div>
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label class="form-label">Last Name</label>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-4">
+                                <label class="form-label fw-bold">Last Name</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light">
+                                        <i class="fas fa-signature text-muted"></i>
+                                    </span>
                                     {{ form.last_name }}
                                 </div>
                             </div>
                         </div>
+                    </div>
 
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label class="form-label">Password</label>
+                    <!-- Security Section -->
+                    <div class="section-header mb-4 mt-4">
+                        <h5 class="text-primary">
+                            <i class="fas fa-lock me-2"></i>
+                            Security
+                        </h5>
+                        <div class="border-bottom"></div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-4">
+                                <label class="form-label fw-bold">Password <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light">
+                                        <i class="fas fa-key text-muted"></i>
+                                    </span>
                                     {{ form.password1 }}
-                                    {% if form.password1.errors %}
-                                    <div class="text-danger">{{ form.password1.errors }}</div>
-                                    {% endif %}
                                 </div>
+                                {% if form.password1.errors %}
+                                <div class="text-danger small mt-1">
+                                    <i class="fas fa-exclamation-circle me-1"></i>
+                                    {{ form.password1.errors }}
+                                </div>
+                                {% endif %}
                             </div>
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label class="form-label">Confirm Password</label>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-4">
+                                <label class="form-label fw-bold">Confirm Password <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light">
+                                        <i class="fas fa-key text-muted"></i>
+                                    </span>
                                     {{ form.password2 }}
-                                    {% if form.password2.errors %}
-                                    <div class="text-danger">{{ form.password2.errors }}</div>
-                                    {% endif %}
+                                </div>
+                                {% if form.password2.errors %}
+                                <div class="text-danger small mt-1">
+                                    <i class="fas fa-exclamation-circle me-1"></i>
+                                    {{ form.password2.errors }}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Contact & Medical Information -->
+                    <div class="section-header mb-4 mt-4">
+                        <h5 class="text-primary">
+                            <i class="fas fa-address-book me-2"></i>
+                            Contact & Medical Information
+                        </h5>
+                        <div class="border-bottom"></div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-4">
+                                <label class="form-label fw-bold">Phone Number</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light">
+                                        <i class="fas fa-phone text-muted"></i>
+                                    </span>
+                                    {{ form.phone }}
                                 </div>
                             </div>
                         </div>
-
-                        <div class="mb-3">
-                            <label class="form-label">Phone</label>
-                            {{ form.phone }}
+                        <div class="col-md-6">
+                            <div class="mb-4">
+                                <label class="form-label fw-bold">Date of Birth</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light">
+                                        <i class="fas fa-calendar-alt text-muted"></i>
+                                    </span>
+                                    {{ form.date_of_birth }}
+                                </div>
+                            </div>
                         </div>
+                    </div>
 
-                        <div class="mb-3">
-                            <label class="form-label">Date of Birth</label>
-                            {{ form.date_of_birth }}
-                        </div>
-
-                        <div class="mb-3">
-                            <label class="form-label">Address</label>
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">Home Address</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light align-items-start">
+                                <i class="fas fa-home text-muted mt-1"></i>
+                            </span>
                             {{ form.address }}
                         </div>
+                    </div>
 
-                        <div class="mb-3">
-                            <label class="form-label">Emergency Contact</label>
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">Emergency Contact Number</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light">
+                                <i class="fas fa-phone-alt text-muted"></i>
+                            </span>
                             {{ form.emergency_contact }}
                         </div>
-
-                        <button type="submit" class="btn btn-primary w-100">Register</button>
-                    </form>
-
-                    <div class="text-center mt-3">
-                        <p>Already have an account? <a href="{% url 'login' %}">Login here</a></p>
+                        <div class="form-text">Please provide a reliable emergency contact number</div>
                     </div>
+
+                    <!-- Submit Button -->
+                    <div class="d-grid mt-4">
+                        <button type="submit" class="btn btn-primary btn-lg py-3">
+                            <i class="fas fa-user-plus me-2"></i>
+                            Create My Account
+                        </button>
+                    </div>
+
+                    <!-- Login Redirect -->
+                    <div class="text-center mt-4 pt-3 border-top">
+                        <p class="text-muted mb-0">
+                            Already have an account?
+                            <a href="{% url 'login' %}" class="text-primary fw-bold text-decoration-none">
+                                Sign In Here
+                                <i class="fas fa-arrow-right ms-1"></i>
+                            </a>
+                        </p>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Features Section -->
+        <div class="row mt-5">
+            <div class="col-md-4 text-center">
+                <div class="feature-card p-3">
+                    <i class="fas fa-calendar-check fa-2x text-primary mb-3"></i>
+                    <h6>Easy Appointments</h6>
+                    <p class="text-muted small">Book and manage your medical appointments online</p>
+                </div>
+            </div>
+            <div class="col-md-4 text-center">
+                <div class="feature-card p-3">
+                    <i class="fas fa-file-medical fa-2x text-primary mb-3"></i>
+                    <h6>Digital Records</h6>
+                    <p class="text-muted small">Access your medical history and lab reports anytime</p>
+                </div>
+            </div>
+            <div class="col-md-4 text-center">
+                <div class="feature-card p-3">
+                    <i class="fas fa-shield-alt fa-2x text-primary mb-3"></i>
+                    <h6>Secure & Private</h6>
+                    <p class="text-muted small">Your medical information is protected and confidential</p>
                 </div>
             </div>
         </div>
     </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.card {
+    border-radius: 15px;
+    overflow: hidden;
+}
+
+.card-header {
+    border-radius: 15px 15px 0 0 !important;
+}
+
+.input-group-text {
+    border-right: none;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+}
+
+.form-control {
+    border-left: none;
+    padding: 12px 15px;
+    transition: all 0.3s ease;
+}
+
+.form-control:focus {
+    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.1);
+    border-color: #86b7fe;
+}
+
+.section-header {
+    position: relative;
+}
+
+.section-header .border-bottom {
+    height: 2px;
+    background: linear-gradient(90deg, #0d6efd, transparent);
+    margin-top: 5px;
+}
+
+.feature-card {
+    border-radius: 10px;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    border: 1px solid #e9ecef;
+}
+
+.feature-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%);
+    border: none;
+    border-radius: 10px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(13, 110, 253, 0.4);
+}
+
+.form-label {
+    color: #495057;
+    margin-bottom: 8px;
+}
+
+.text-danger {
+    font-weight: 500;
+}
+
+/* Custom styling for form fields */
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="date"],
+textarea {
+    border-radius: 0 8px 8px 0;
+    border: 1px solid #ced4da;
+}
+
+.input-group {
+    border-radius: 8px;
+}
+
+.input-group:focus-within {
+    box-shadow: 0 0 0 2px rgba(13, 110, 253, 0.25);
+    border-radius: 8px;
+}
+</style>
 {% endblock %}
