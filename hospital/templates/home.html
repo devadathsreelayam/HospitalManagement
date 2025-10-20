@@ -1,14 +1,496 @@
 {% extends 'base.html' %}
+{% load static %}
+
+{% block full_width_content %}
 {% block content %}
-    <section style="height: 100vh;">
-        <h1>Welcome to Our Hospital</h1>
-        <p>Get the best treatment you can avail without any rush and difficulties. All at your fingertips. Enable the service of the best doctors in Kerala.</p>
-    </section>
+<!-- Hero Section with Slideshow -->
+<section class="hero-section">
+    <div id="hospitalCarousel" class="carousel slide" data-bs-ride="carousel">
+        <div class="carousel-indicators">
+            <button type="button" data-bs-target="#hospitalCarousel" data-bs-slide-to="0" class="active"></button>
+            <button type="button" data-bs-target="#hospitalCarousel" data-bs-slide-to="1"></button>
+            <button type="button" data-bs-target="#hospitalCarousel" data-bs-slide-to="2"></button>
+            <button type="button" data-bs-target="#hospitalCarousel" data-bs-slide-to="3"></button>
+        </div>
 
+        <div class="carousel-inner">
+            <!-- Slide 1 -->
+            <div class="carousel-item active">
+                <div class="carousel-slide" style="background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url('https://images.unsplash.com/photo-1586773860418-d37222d8fce3?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80') center/cover;">
+                    <div class="carousel-content">
+                        <h1 class="display-4 fw-bold text-white mb-4">Your Health, Our Priority</h1>
+                        <p class="lead text-white mb-4">Experience world-class healthcare with state-of-the-art facilities and compassionate medical professionals.</p>
+                        <div class="hero-buttons">
+                            <a href="{% url 'view_doctors' %}" class="btn btn-primary btn-lg me-3">
+                                <i class="fas fa-calendar-plus me-2"></i>Book Appointment
+                            </a>
+                            <a href="{% url 'register' %}" class="btn btn-outline-light btn-lg">
+                                <i class="fas fa-user-plus me-2"></i>Join Now
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-    <h1>Lab Reports and Prescriptions at Your Fingertips</h1>
-    <p>Our robust system allows patients to view their lab records, prescriptions and treatment plans in a single click.</p>
+            <!-- Slide 2 -->
+            <div class="carousel-item">
+                <div class="carousel-slide" style="background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url('https://images.unsplash.com/photo-1551076805-e1869033e561?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2032&q=80') center/cover;">
+                    <div class="carousel-content">
+                        <h1 class="display-4 fw-bold text-white mb-4">Expert Medical Care</h1>
+                        <p class="lead text-white mb-4">Our team of specialized doctors provides personalized treatment plans for optimal health outcomes.</p>
+                        <div class="hero-buttons">
+                            <a href="{% url 'view_doctors' %}" class="btn btn-primary btn-lg me-3">
+                                <i class="fas fa-user-md me-2"></i>Meet Our Doctors
+                            </a>
+                            <a href="#services" class="btn btn-outline-light btn-lg">
+                                <i class="fas fa-stethoscope me-2"></i>Our Services
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-    <h1>Manage Appointments</h1>
-    <p>View and manage all of your appointments with doctors any time from any where.</p>
+            <!-- Slide 3 -->
+            <div class="carousel-item">
+                <div class="carousel-slide" style="background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url('https://images.unsplash.com/photo-1579684385127-1ef15d508118?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2080&q=80') center/cover;">
+                    <div class="carousel-content">
+                        <h1 class="display-4 fw-bold text-white mb-4">Advanced Laboratory Services</h1>
+                        <p class="lead text-white mb-4">Get accurate diagnostic results with our cutting-edge laboratory equipment and expert technicians.</p>
+                        <div class="hero-buttons">
+                            <a href="#lab-services" class="btn btn-primary btn-lg me-3">
+                                <i class="fas fa-microscope me-2"></i>Lab Services
+                            </a>
+                            <a href="{% url 'register' %}" class="btn btn-outline-light btn-lg">
+                                <i class="fas fa-file-medical me-2"></i>View Reports
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Slide 4 -->
+            <div class="carousel-item">
+                <div class="carousel-slide" style="background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url('https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2053&q=80') center/cover;">
+                    <div class="carousel-content">
+                        <h1 class="display-4 fw-bold text-white mb-4">24/7 Emergency Care</h1>
+                        <p class="lead text-white mb-4">Round-the-clock emergency services with immediate medical attention when you need it most.</p>
+                        <div class="hero-buttons">
+                            <a href="#emergency" class="btn btn-danger btn-lg me-3">
+                                <i class="fas fa-ambulance me-2"></i>Emergency Help
+                            </a>
+                            <a href="tel:+1234567890" class="btn btn-outline-light btn-lg">
+                                <i class="fas fa-phone me-2"></i>Call Now
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <button class="carousel-control-prev" type="button" data-bs-target="#hospitalCarousel" data-bs-slide="prev">
+            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+            <span class="visually-hidden">Previous</span>
+        </button>
+        <button class="carousel-control-next" type="button" data-bs-target="#hospitalCarousel" data-bs-slide="next">
+            <span class="carousel-control-next-icon" aria-hidden="true"></span>
+            <span class="visually-hidden">Next</span>
+        </button>
+    </div>
+</section>
+
+<!-- Quick Stats Section -->
+<section class="quick-stats py-5 bg-light">
+    <div class="container">
+        <div class="row text-center">
+            <div class="col-md-3 col-6 mb-4">
+                <div class="stat-card">
+                    <i class="fas fa-user-md fa-3x text-primary mb-3"></i>
+                    <h3 class="fw-bold text-primary">50+</h3>
+                    <p class="text-muted">Expert Doctors</p>
+                </div>
+            </div>
+            <div class="col-md-3 col-6 mb-4">
+                <div class="stat-card">
+                    <i class="fas fa-user-injured fa-3x text-success mb-3"></i>
+                    <h3 class="fw-bold text-success">10,000+</h3>
+                    <p class="text-muted">Happy Patients</p>
+                </div>
+            </div>
+            <div class="col-md-3 col-6 mb-4">
+                <div class="stat-card">
+                    <i class="fas fa-procedures fa-3x text-info mb-3"></i>
+                    <h3 class="fw-bold text-info">24/7</h3>
+                    <p class="text-muted">Emergency Services</p>
+                </div>
+            </div>
+            <div class="col-md-3 col-6 mb-4">
+                <div class="stat-card">
+                    <i class="fas fa-award fa-3x text-warning mb-3"></i>
+                    <h3 class="fw-bold text-warning">15+</h3>
+                    <p class="text-muted">Years Experience</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Services Section -->
+<section id="services" class="services-section py-5">
+    <div class="container">
+        <div class="text-center mb-5">
+            <h2 class="display-5 fw-bold text-primary mb-3">Our Medical Services</h2>
+            <p class="lead text-muted">Comprehensive healthcare services for all your medical needs</p>
+        </div>
+
+        <div class="row">
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="service-card card h-100 border-0 shadow-sm">
+                    <div class="card-body text-center p-4">
+                        <div class="service-icon mb-3">
+                            <i class="fas fa-heartbeat fa-3x text-danger"></i>
+                        </div>
+                        <h4 class="fw-bold">Cardiology</h4>
+                        <p class="text-muted">Advanced heart care with state-of-the-art diagnostic equipment and expert cardiologists.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="service-card card h-100 border-0 shadow-sm">
+                    <div class="card-body text-center p-4">
+                        <div class="service-icon mb-3">
+                            <i class="fas fa-brain fa-3x text-info"></i>
+                        </div>
+                        <h4 class="fw-bold">Neurology</h4>
+                        <p class="text-muted">Comprehensive neurological care for brain and nervous system disorders.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="service-card card h-100 border-0 shadow-sm">
+                    <div class="card-body text-center p-4">
+                        <div class="service-icon mb-3">
+                            <i class="fas fa-baby fa-3x text-warning"></i>
+                        </div>
+                        <h4 class="fw-bold">Pediatrics</h4>
+                        <p class="text-muted">Specialized care for children from infancy through adolescence.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="service-card card h-100 border-0 shadow-sm">
+                    <div class="card-body text-center p-4">
+                        <div class="service-icon mb-3">
+                            <i class="fas fa-x-ray fa-3x text-success"></i>
+                        </div>
+                        <h4 class="fw-bold">Radiology</h4>
+                        <p class="text-muted">Advanced imaging services including MRI, CT Scan, and X-Ray.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="service-card card h-100 border-0 shadow-sm">
+                    <div class="card-body text-center p-4">
+                        <div class="service-icon mb-3">
+                            <i class="fas fa-teeth fa-3x text-primary"></i>
+                        </div>
+                        <h4 class="fw-bold">Dentistry</h4>
+                        <p class="text-muted">Complete dental care services for maintaining oral health.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="service-card card h-100 border-0 shadow-sm">
+                    <div class="card-body text-center p-4">
+                        <div class="service-icon mb-3">
+                            <i class="fas fa-eye fa-3x text-purple"></i>
+                        </div>
+                        <h4 class="fw-bold">Ophthalmology</h4>
+                        <p class="text-muted">Expert eye care and vision correction services.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Lab Services Section -->
+<section id="lab-services" class="lab-section py-5 bg-light">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-6 mb-4">
+                <img src="https://images.unsplash.com/photo-1582719471384-894fbb16e074?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80"
+                     alt="Modern Laboratory" class="img-fluid rounded shadow">
+            </div>
+            <div class="col-lg-6">
+                <h2 class="display-6 fw-bold text-primary mb-4">Advanced Laboratory Services</h2>
+                <p class="lead text-muted mb-4">Our state-of-the-art laboratory is equipped with the latest technology to provide accurate and timely diagnostic results.</p>
+
+                <div class="lab-features">
+                    <div class="feature-item mb-3">
+                        <i class="fas fa-check-circle text-success me-2"></i>
+                        <span>Complete Blood Tests & Analysis</span>
+                    </div>
+                    <div class="feature-item mb-3">
+                        <i class="fas fa-check-circle text-success me-2"></i>
+                        <span>Digital Report Delivery</span>
+                    </div>
+                    <div class="feature-item mb-3">
+                        <i class="fas fa-check-circle text-success me-2"></i>
+                        <span>24-hour Turnaround for Most Tests</span>
+                    </div>
+                    <div class="feature-item mb-3">
+                        <i class="fas fa-check-circle text-success me-2"></i>
+                        <span>Expert Pathologists & Technicians</span>
+                    </div>
+                    <div class="feature-item mb-3">
+                        <i class="fas fa-check-circle text-success me-2"></i>
+                        <span>Online Report Access for Patients</span>
+                    </div>
+                </div>
+
+                <a href="{% url 'register' %}" class="btn btn-primary btn-lg mt-3">
+                    <i class="fas fa-file-medical-alt me-2"></i>Access Your Reports
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Seamless Appointments Section -->
+<section class="appointment-section py-5">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-6 order-lg-1 order-2">
+                <h2 class="display-6 fw-bold text-primary mb-4">Seamless Appointment Booking</h2>
+                <p class="lead text-muted mb-4">Book your medical appointments online with our easy-to-use platform. Choose your preferred doctor, select convenient time slots, and receive instant confirmation.</p>
+
+                <div class="appointment-features">
+                    <div class="feature-card-appointment mb-3 p-3 bg-light rounded">
+                        <i class="fas fa-search text-primary me-3"></i>
+                        <span><strong>Find Specialists:</strong> Browse through our expert doctors by specialization</span>
+                    </div>
+                    <div class="feature-card-appointment mb-3 p-3 bg-light rounded">
+                        <i class="fas fa-calendar-check text-success me-3"></i>
+                        <span><strong>Easy Scheduling:</strong> Book appointments 24/7 from anywhere</span>
+                    </div>
+                    <div class="feature-card-appointment mb-3 p-3 bg-light rounded">
+                        <i class="fas fa-bell text-warning me-3"></i>
+                        <span><strong>Smart Reminders:</strong> Get appointment reminders via email & SMS</span>
+                    </div>
+                    <div class="feature-card-appointment mb-3 p-3 bg-light rounded">
+                        <i class="fas fa-file-medical text-info me-3"></i>
+                        <span><strong>Digital Records:</strong> Access your medical history anytime</span>
+                    </div>
+                </div>
+
+                <div class="mt-4">
+                    <a href="{% url 'view_doctors' %}" class="btn btn-primary btn-lg me-3">
+                        <i class="fas fa-search me-2"></i>Find Doctors
+                    </a>
+                    <a href="{% url 'register' %}" class="btn btn-outline-primary btn-lg">
+                        <i class="fas fa-user-plus me-2"></i>Get Started
+                    </a>
+                </div>
+            </div>
+            <div class="col-lg-6 order-lg-2 order-1 mb-4">
+                <img src="https://images.unsplash.com/photo-1576091160550-2173dba999ef?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80"
+                     alt="Digital Healthcare" class="img-fluid rounded shadow">
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Emergency Section -->
+<section id="emergency" class="emergency-section py-5 bg-danger text-white">
+    <div class="container text-center">
+        <h2 class="display-5 fw-bold mb-4">24/7 Emergency Services</h2>
+        <p class="lead mb-4">Immediate medical attention for critical situations. Our emergency department is always ready to serve you.</p>
+
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="emergency-contact-card bg-white text-dark rounded p-4 shadow">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <i class="fas fa-phone-alt fa-2x text-danger mb-2"></i>
+                            <h4>Emergency Hotline</h4>
+                            <p class="fs-5 fw-bold text-danger">+1 (234) 567-8900</p>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <i class="fas fa-ambulance fa-2x text-danger mb-2"></i>
+                            <h4>Ambulance Service</h4>
+                            <p class="fs-5 fw-bold text-danger">+1 (234) 567-8911</p>
+                        </div>
+                    </div>
+                    <p class="text-muted mb-0">Our emergency team is available round the clock to provide immediate medical care.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CTA Section -->
+<section class="cta-section py-5 bg-primary text-white">
+    <div class="container text-center">
+        <h2 class="display-5 fw-bold mb-3">Ready to Take Control of Your Health?</h2>
+        <p class="lead mb-4">Join thousands of patients who trust us with their healthcare needs.</p>
+        <div class="cta-buttons">
+            <a href="{% url 'register' %}" class="btn btn-light btn-lg me-3">
+                <i class="fas fa-user-plus me-2"></i>Create Account
+            </a>
+            <a href="{% url 'view_doctors' %}" class="btn btn-outline-light btn-lg">
+                <i class="fas fa-calendar-plus me-2"></i>Book Appointment
+            </a>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+/* Hero Section Styles */
+.hero-section {
+    position: relative;
+}
+
+.carousel-item {
+    height: 80vh;
+    min-height: 600px;
+}
+
+.carousel-slide {
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-size: cover;
+    background-position: center;
+}
+
+.carousel-content {
+    text-align: center;
+    max-width: 800px;
+    padding: 2rem;
+}
+
+.carousel-control-prev, .carousel-control-next {
+    width: 5%;
+}
+
+.carousel-indicators button {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    margin: 0 8px;
+}
+
+/* Quick Stats */
+.stat-card {
+    transition: transform 0.3s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+}
+
+/* Service Cards */
+.service-card {
+    transition: all 0.3s ease;
+    border-radius: 15px;
+}
+
+.service-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1) !important;
+}
+
+.service-icon {
+    transition: transform 0.3s ease;
+}
+
+.service-card:hover .service-icon {
+    transform: scale(1.1);
+}
+
+/* Lab Features */
+.lab-features .feature-item {
+    font-size: 1.1rem;
+    font-weight: 500;
+}
+
+/* Appointment Features */
+.feature-card-appointment {
+    transition: all 0.3s ease;
+    border-left: 4px solid #0d6efd;
+}
+
+.feature-card-appointment:hover {
+    transform: translateX(5px);
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%) !important;
+}
+
+/* Emergency Section */
+.emergency-contact-card {
+    transition: transform 0.3s ease;
+}
+
+.emergency-contact-card:hover {
+    transform: scale(1.02);
+}
+
+/* CTA Section */
+.cta-section {
+    background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%);
+}
+
+/* Custom Colors */
+.text-purple {
+    color: #6f42c1 !important;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .carousel-item {
+        height: 60vh;
+        min-height: 400px;
+    }
+
+    .display-4 {
+        font-size: 2rem;
+    }
+
+    .hero-buttons .btn {
+        display: block;
+        width: 100%;
+        margin-bottom: 1rem;
+    }
+
+    .hero-buttons .btn:last-child {
+        margin-bottom: 0;
+    }
+}
+
+/* Smooth Scrolling */
+html {
+    scroll-behavior: smooth;
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Auto-advance carousel every 5 seconds
+document.addEventListener('DOMContentLoaded', function() {
+    var myCarousel = document.getElementById('hospitalCarousel');
+    var carousel = new bootstrap.Carousel(myCarousel, {
+        interval: 5000,
+        wrap: true
+    });
+});
+</script>
+{% endblock %}
 {% endblock %}
