@@ -86,7 +86,12 @@
                             <tr>
                                 <td>#{{ appointment.token_number }}</td>
                                 <td>
-                                    <strong><a href="{% url 'patient_history' appointment.patient_id %}" id="newWindowLink"  style="text-decoration: none; color: inherit;">{{ appointment.patient.get_full_name }}</a></strong><br>
+                                    <strong>
+                                        <a href="{% url 'patient_history' appointment.patient_id %}?return_date={{ selected_date|date:'Y-m-d' }}"
+                                           style="text-decoration: none; color: inherit;">
+                                           {{ appointment.patient.get_full_name }}
+                                        </a>
+                                    </strong><br>
                                     <small class="text-muted">
                                         {% if appointment.patient.patient %}
                                             {{ appointment.patient.patient.date_of_birth|timesince }} old •
