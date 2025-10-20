@@ -1026,3 +1026,88 @@ def admin_doctor_toggle_active(request, doctor_id):
     messages.success(request, f'Doctor {doctor.user.get_full_name()} has been {status}.')
 
     return redirect('admin_doctors_list')
+
+
+@login_required
+def admin_patients_list(request):
+    """Admin view to list all patients"""
+    if request.user.user_type != 'admin' and not request.user.is_staff:
+        messages.error(request, 'Access denied.')
+        return redirect('dashboard')
+
+    # Get search parameters
+    search_query = request.GET.get('search', '')
+
+    # Get all patients
+    patients = Patient.objects.select_related('user').all()
+
+    # Apply search filter
+    if search_query:
+        patients = patients.filter(
+            Q(user__first_name__icontains=search_query) |
+            Q(user__last_name__icontains=search_query) |
+            Q(user__username__icontains=search_query) |
+            Q(user__email__icontains=search_query) |
+            Q(user__phone__icontains=search_query)
+        )
+
+    context = {
+        'patients': patients,
+        'search_query': search_query,
+        'total_patients': patients.count(),
+    }
+    return render(request, 'admin_patients_list.html', context)
+
+
+@login_required
+def admin_patient_detail(request, patient_id):
+    """Admin view for patient details"""
+    if request.user.user_type != 'admin' and not request.user.is_staff:
+        messages.error(request, 'Access denied.')
+        return redirect('dashboard')
+
+    patient = get_object_or_404(Patient, id=patient_id)
+
+    # Get patient's appointments
+    appointments = Appointment.objects.filter(patient=patient.user).select_related(
+        'doctor', 'doctor__user'
+    ).order_by('-appointment_date')[:10]
+
+    # Get patient's lab reports
+    lab_reports = LabReport.objects.filter(appointment__patient=patient.user).select_related(
+        'appointment', 'doctor', 'doctor__user'
+    ).order_by('-uploaded_at')[:10]
+
+    # Calculate statistics
+    total_appointments = Appointment.objects.filter(patient=patient.user).count()
+    completed_appointments = Appointment.objects.filter(patient=patient.user, status='completed').count()
+    upcoming_appointments = Appointment.objects.filter(patient=patient.user, status='scheduled').count()
+    total_lab_reports = LabReport.objects.filter(appointment__patient=patient.user).count()
+
+    context = {
+        'patient': patient,
+        'appointments': appointments,
+        'lab_reports': lab_reports,
+        'total_appointments': total_appointments,
+        'completed_appointments': completed_appointments,
+        'upcoming_appointments': upcoming_appointments,
+        'total_lab_reports': total_lab_reports,
+    }
+    return render(request, 'admin_patient_detail.html', context)
+
+
+@login_required
+def admin_patient_toggle_active(request, patient_id):
+    """Toggle patient active status"""
+    if request.user.user_type != 'admin' and not request.user.is_staff:
+        messages.error(request, 'Access denied.')
+        return redirect('dashboard')
+
+    patient = get_object_or_404(Patient, id=patient_id)
+    patient.user.is_active = not patient.user.is_active
+    patient.user.save()
+
+    status = "activated" if patient.user.is_active else "deactivated"
+    messages.success(request, f'Patient {patient.user.get_full_name()} has been {status}.')
+
+    return redirect('admin_patients_list')

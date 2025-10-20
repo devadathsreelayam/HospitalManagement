@@ -35,6 +35,9 @@ urlpatterns = [
     path('admin/doctors/<int:doctor_id>/', views.admin_doctor_detail, name='admin_doctor_detail'),
     path('admin/doctors/<int:doctor_id>/edit/', views.admin_doctor_edit, name='admin_doctor_edit'),
     path('admin/doctors/<int:doctor_id>/toggle-active/', views.admin_doctor_toggle_active, name='admin_doctor_toggle_active'),
+    path('admin/patients/', views.admin_patients_list, name='admin_patients_list'),
+    path('admin/patients/<int:patient_id>/', views.admin_patient_detail, name='admin_patient_detail'),
+    path('admin/patients/<int:patient_id>/toggle-active/', views.admin_patient_toggle_active, name='admin_patient_toggle_active'),
 ]
 
 if settings.DEBUG:
