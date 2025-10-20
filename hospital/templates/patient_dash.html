@@ -8,6 +8,36 @@
 </div>
 
 <div class="row mt-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Account Management</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="d-grid gap-2">
+                            <a href="{% url 'patient_profile_update' %}" class="btn btn-outline-primary">
+                                <i class="fas fa-user-edit me-2"></i> Update Profile Information
+                            </a>
+                            <small class="text-muted text-center">Update your personal and contact details</small>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="d-grid gap-2">
+                            <button class="btn btn-outline-secondary" disabled>
+                                <i class="fas fa-lock me-2"></i> Change Password (Coming Soon)
+                            </button>
+                            <small class="text-muted text-center">Password change functionality</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
     <div class="col-md-4 mb-4">
         <div class="card statistic-card professional-card border-0 shadow-sm">
             <div class="card-body p-4">
