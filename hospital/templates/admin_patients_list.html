@@ -1,0 +1,197 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h2 class="text-primary">Patient Management</h2>
+                <p class="text-muted">Manage all patients in the system</p>
+            </div>
+            <div class="text-muted">
+                <small>Total Patients: {{ total_patients }}</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Search Section -->
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-8">
+                <div class="input-group">
+                    <span class="input-group-text bg-light">
+                        <i class="fas fa-search text-muted"></i>
+                    </span>
+                    <input type="text" name="search" class="form-control"
+                           placeholder="Search patients by name, email, phone, or username..."
+                           value="{{ search_query }}">
+                </div>
+            </div>
+            <div class="col-md-4">
+                <button type="submit" class="btn btn-outline-primary w-100">
+                    <i class="fas fa-search me-2"></i>Search
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Patients List -->
+<div class="card border-0 shadow-sm">
+    <div class="card-header bg-transparent border-0 d-flex justify-content-between align-items-center">
+        <h5 class="card-title mb-0">
+            <i class="fas fa-users me-2 text-success"></i>
+            All Patients ({{ total_patients }})
+        </h5>
+        <div class="text-muted">
+            <small>Showing {{ patients.count }} patients</small>
+        </div>
+    </div>
+    <div class="card-body">
+        {% if patients %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead class="table-light">
+                    <tr>
+                        <th>Patient</th>
+                        <th>Contact Information</th>
+                        <th>Date of Birth</th>
+                        <th>Gender</th>
+                        <th>Emergency Contact</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for patient in patients %}
+                    <tr>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <div class="avatar-circle me-3">
+                                    <i class="fas fa-user text-white"></i>
+                                </div>
+                                <div>
+                                    <h6 class="mb-1">{{ patient.user.get_full_name }}</h6>
+                                    <small class="text-muted">@{{ patient.user.username }}</small>
+                                    <br>
+                                    <small class="text-muted">
+                                        Member since {{ patient.user.date_joined|date:"M Y" }}
+                                    </small>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <small class="text-muted d-block">
+                                <i class="fas fa-envelope me-1"></i>{{ patient.user.email }}
+                            </small>
+                            <small class="text-muted">
+                                <i class="fas fa-phone me-1"></i>{{ patient.user.phone }}
+                            </small>
+                        </td>
+                        <td>
+                            <small class="text-muted">{{ patient.date_of_birth|date:"M d, Y" }}</small>
+                            <br>
+                            <small class="text-muted">
+                                ({{ patient.date_of_birth|timesince }} old)
+                            </small>
+                        </td>
+                        <td>
+                            <span class="badge bg-info bg-opacity-10 text-info">
+                                {{ patient.get_gender_display }}
+                            </span>
+                        </td>
+                        <td>
+                            <small class="text-muted">{{ patient.emergency_contact }}</small>
+                        </td>
+                        <td>
+                            {% if patient.user.is_active %}
+                            <span class="badge bg-success">Active</span>
+                            {% else %}
+                            <span class="badge bg-danger">Inactive</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="btn-group btn-group-sm">
+                                <a href="{% url 'admin_patient_detail' patient.id %}"
+                                   class="btn btn-outline-primary"
+                                   data-bs-toggle="tooltip" title="View Details">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                <form method="post" action="{% url 'admin_patient_toggle_active' patient.id %}"
+                                      style="display: inline;">
+                                    {% csrf_token %}
+                                    <button type="submit"
+                                            class="btn btn-outline-{% if patient.user.is_active %}danger{% else %}success{% endif %}"
+                                            data-bs-toggle="tooltip"
+                                            title="{% if patient.user.is_active %}Deactivate{% else %}Activate{% endif %} Patient">
+                                        <i class="fas fa-{% if patient.user.is_active %}times{% else %}check{% endif %}"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-5">
+            <i class="fas fa-users fa-3x text-muted mb-3"></i>
+            <h5 class="text-muted">No Patients Found</h5>
+            <p class="text-muted">
+                {% if search_query %}
+                No patients match your search criteria.
+                {% else %}
+                No patients have been registered yet.
+                {% endif %}
+            </p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.avatar-circle {
+    width: 40px;
+    height: 40px;
+    background: linear-gradient(135deg, #28a745, #20c997);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+}
+
+.avatar-circle i {
+    font-size: 0.8rem;
+    color: white;
+}
+
+.table-hover tbody tr:hover {
+    background-color: rgba(0, 0, 0, 0.02);
+}
+
+.btn-group .btn {
+    border-radius: 6px;
+    margin-right: 2px;
+}
+
+.badge {
+    font-size: 0.75rem;
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl)
+    });
+});
+</script>
+{% endblock %}
