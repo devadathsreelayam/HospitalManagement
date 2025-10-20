@@ -15,6 +15,10 @@ class User(AbstractUser):
     phone = models.CharField(max_length=10, blank=True)  # Increased length
     user_type = models.CharField(max_length=10, choices=USER_TYPES, default='patient')
 
+    def get_user_type_display(self):
+        """Get human-readable user type"""
+        return dict(self.USER_TYPES).get(self.user_type, 'Patient')
+
     def __str__(self):
         return f"{self.username} ({self.user_type})"
 
