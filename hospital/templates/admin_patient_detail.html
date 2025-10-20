@@ -1,0 +1,289 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h2 class="text-primary">Patient Details</h2>
+                <p class="text-muted">Complete information about {{ patient.user.get_full_name }}</p>
+            </div>
+            <div>
+                <a href="{% url 'admin_patients_list' %}" class="btn btn-outline-secondary me-2">
+                    <i class="fas fa-arrow-left me-2"></i>Back to List
+                </a>
+                <form method="post" action="{% url 'admin_patient_toggle_active' patient.id %}" style="display: inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-{% if patient.user.is_active %}danger{% else %}success{% endif %}">
+                        <i class="fas fa-{% if patient.user.is_active %}times{% else %}check{% endif %} me-2"></i>
+                        {% if patient.user.is_active %}Deactivate{% else %}Activate{% endif %}
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Patient Information -->
+    <div class="col-md-4 mb-4">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-success text-white">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-user me-2"></i>Personal Information
+                </h5>
+            </div>
+            <div class="card-body text-center">
+                <div class="patient-avatar mb-3">
+                    <div class="avatar-circle-large mx-auto">
+                        <i class="fas fa-user fa-2x text-white"></i>
+                    </div>
+                </div>
+                <h4 class="text-success">{{ patient.user.get_full_name }}</h4>
+                <p class="text-muted mb-3">Patient</p>
+
+                <div class="patient-status mb-3">
+                    {% if patient.user.is_active %}
+                    <span class="badge bg-success fs-6">Active</span>
+                    {% else %}
+                    <span class="badge bg-danger fs-6">Inactive</span>
+                    {% endif %}
+                </div>
+
+                <div class="patient-gender">
+                    <span class="badge bg-info fs-6">{{ patient.get_gender_display }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Contact Information -->
+        <div class="card border-0 shadow-sm mt-4">
+            <div class="card-header bg-info text-white">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-address-card me-2"></i>Contact Information
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="contact-item mb-3">
+                    <i class="fas fa-envelope text-primary me-2"></i>
+                    <strong>Email:</strong>
+                    <div class="text-muted">{{ patient.user.email }}</div>
+                </div>
+                <div class="contact-item mb-3">
+                    <i class="fas fa-phone text-primary me-2"></i>
+                    <strong>Phone:</strong>
+                    <div class="text-muted">{{ patient.user.phone }}</div>
+                </div>
+                <div class="contact-item mb-3">
+                    <i class="fas fa-user text-primary me-2"></i>
+                    <strong>Username:</strong>
+                    <div class="text-muted">@{{ patient.user.username }}</div>
+                </div>
+                <div class="contact-item mb-3">
+                    <i class="fas fa-phone-alt text-primary me-2"></i>
+                    <strong>Emergency Contact:</strong>
+                    <div class="text-muted">{{ patient.emergency_contact }}</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Medical Information -->
+        <div class="card border-0 shadow-sm mt-4">
+            <div class="card-header bg-warning text-white">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-heartbeat me-2"></i>Medical Information
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="medical-item mb-3">
+                    <i class="fas fa-birthday-cake text-primary me-2"></i>
+                    <strong>Date of Birth:</strong>
+                    <div class="text-muted">{{ patient.date_of_birth|date:"M d, Y" }}</div>
+                    <small class="text-muted">({{ patient.date_of_birth|timesince }} old)</small>
+                </div>
+                <div class="medical-item mb-3">
+                    <i class="fas fa-venus-mars text-primary me-2"></i>
+                    <strong>Gender:</strong>
+                    <div class="text-muted">{{ patient.get_gender_display }}</div>
+                </div>
+                <div class="medical-item">
+                    <i class="fas fa-home text-primary me-2"></i>
+                    <strong>Address:</strong>
+                    <div class="text-muted">{{ patient.address|linebreaks }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics & Activity -->
+    <div class="col-md-8 mb-4">
+        <!-- Statistics -->
+        <div class="row">
+            <div class="col-md-3 mb-3">
+                <div class="card text-center border-0 shadow-sm">
+                    <div class="card-body">
+                        <i class="fas fa-calendar-check fa-2x text-primary mb-2"></i>
+                        <h3 class="text-primary">{{ total_appointments }}</h3>
+                        <p class="text-muted mb-0">Total Appointments</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="card text-center border-0 shadow-sm">
+                    <div class="card-body">
+                        <i class="fas fa-check-circle fa-2x text-success mb-2"></i>
+                        <h3 class="text-success">{{ completed_appointments }}</h3>
+                        <p class="text-muted mb-0">Completed</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="card text-center border-0 shadow-sm">
+                    <div class="card-body">
+                        <i class="fas fa-clock fa-2x text-warning mb-2"></i>
+                        <h3 class="text-warning">{{ upcoming_appointments }}</h3>
+                        <p class="text-muted mb-0">Upcoming</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="card text-center border-0 shadow-sm">
+                    <div class="card-body">
+                        <i class="fas fa-file-medical fa-2x text-info mb-2"></i>
+                        <h3 class="text-info">{{ total_lab_reports }}</h3>
+                        <p class="text-muted mb-0">Lab Reports</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Appointments -->
+        <div class="card border-0 shadow-sm mt-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-calendar-day me-2"></i>Recent Appointments
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if appointments %}
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Doctor</th>
+                                <th>Date</th>
+                                <th>Time</th>
+                                <th>Status</th>
+                                <th>Reason</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for appointment in appointments %}
+                            <tr>
+                                <td>Dr. {{ appointment.doctor.user.get_full_name }}</td>
+                                <td>{{ appointment.appointment_date|date:"M d, Y" }}</td>
+                                <td>{{ appointment.estimated_time|time:"g:i A" }}</td>
+                                <td>
+                                    <span class="badge bg-{% if appointment.status == 'completed' %}success{% elif appointment.status == 'scheduled' %}primary{% else %}warning{% endif %}">
+                                        {{ appointment.status|title }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <small class="text-muted">
+                                        {{ appointment.reason|truncatewords:5|default:"-" }}
+                                    </small>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-3">
+                    <i class="fas fa-calendar-times fa-2x text-muted mb-2"></i>
+                    <p class="text-muted mb-0">No appointments found</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Recent Lab Reports -->
+        <div class="card border-0 shadow-sm mt-4">
+            <div class="card-header bg-info text-white">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-microscope me-2"></i>Recent Lab Reports
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if lab_reports %}
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Test Name</th>
+                                <th>Type</th>
+                                <th>Doctor</th>
+                                <th>Uploaded</th>
+                                <th>Findings</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for report in lab_reports %}
+                            <tr>
+                                <td>{{ report.test_name }}</td>
+                                <td>
+                                    <span class="badge bg-info bg-opacity-10 text-info">
+                                        {{ report.get_report_type_display }}
+                                    </span>
+                                </td>
+                                <td>Dr. {{ report.doctor.user.get_full_name }}</td>
+                                <td>{{ report.uploaded_at|date:"M d, Y" }}</td>
+                                <td>
+                                    <small class="text-muted">
+                                        {{ report.findings|truncatewords:8|default:"-" }}
+                                    </small>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-3">
+                    <i class="fas fa-file-medical fa-2x text-muted mb-2"></i>
+                    <p class="text-muted mb-0">No lab reports found</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.avatar-circle-large {
+    width: 100px;
+    height: 100px;
+    background: linear-gradient(135deg, #28a745, #20c997);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.avatar-circle-large i {
+    font-size: 2rem;
+    color: white;
+}
+
+.contact-item, .medical-item {
+    border-left: 3px solid #0dcaf0;
+    padding-left: 15px;
+    margin-bottom: 1rem;
+}
+
+.card-header {
+    border-radius: 10px 10px 0 0 !important;
+}
+</style>
+{% endblock %}
