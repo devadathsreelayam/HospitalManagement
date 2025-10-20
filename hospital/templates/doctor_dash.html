@@ -121,15 +121,18 @@
                                 </td>
                                 <td>
                                     <div class="btn-group btn-group-sm">
-                                        <!-- View Reason Button -->
+                                        <!-- View Reason Button - Only for non-cancelled appointments -->
+                                        {% if appointment.status != 'cancelled' %}
                                         <button type="button" class="btn btn-outline-secondary view-reason-btn"
                                                 data-reason="{{ appointment.reason|escapejs }}"
                                                 data-patient-name="{{ appointment.patient.get_full_name }}"
                                                 title="View appointment reason">
                                             <i class="fas fa-sticky-note"></i> Reason
                                         </button>
+                                        {% endif %}
 
-                                        <!-- Prescribe Medicine Button - Show for all dates but disable for future -->
+                                        <!-- Prescribe Medicine Button - Show for all non-cancelled appointments but disable for future -->
+                                        {% if appointment.status != 'cancelled' and appointment.appointment_date <= today %}
                                         <button type="button" class="btn btn-outline-primary prescribe-btn"
                                                 data-appointment-id="{{ appointment.id }}"
                                                 data-patient-name="{{ appointment.patient.get_full_name }}"
@@ -137,6 +140,7 @@
                                                 {% if appointment.appointment_date > today %}disabled title="Can only prescribe for today or previous days"{% endif %}>
                                             <i class="fas fa-prescription"></i> Prescribe
                                         </button>
+                                        {% endif %}
 
                                         <!-- Complete Appointment Button - Only for scheduled appointments on today or past dates -->
                                         {% if appointment.status == 'scheduled' and appointment.appointment_date <= today %}

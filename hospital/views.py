@@ -345,11 +345,19 @@ def add_prescription(request):
 
             # Get appointment
             try:
-                appointment = Appointment.objects.get(id=appointment_id, doctor=request.user.doctor)
+                appointment = Appointment.objects.get(
+                    id=appointment_id,
+                    doctor=request.user.doctor,
+                    status__in=['scheduled', 'cancelled']  # Only allow active appointments
+                )
                 print(f"Found appointment: {appointment}")  # Debug
             except Appointment.DoesNotExist:
                 print("Appointment not found")  # Debug
                 return JsonResponse({'success': False, 'error': 'Appointment not found'})
+
+            # Additional explicit check
+            if appointment.status == 'cancelled':
+                return JsonResponse({'success': False, 'error': 'Cannot prescribe for cancelled appointments'})
 
             # Check if prescription is allowed
             if not appointment.can_prescribe():
@@ -402,7 +410,11 @@ def get_prescription(request, appointment_id):
     try:
         # Doctors can view prescriptions for their appointments
         if request.user.user_type == 'doctor':
-            appointment = Appointment.objects.get(id=appointment_id, doctor=request.user.doctor)
+            appointment = Appointment.objects.get(
+                id=appointment_id,
+                doctor=request.user.doctor,
+                status__in=['schedules', 'completed']
+            )
             print(f"Doctor accessing prescription for their appointment")
 
         # Patients can view their own prescriptions
@@ -413,6 +425,10 @@ def get_prescription(request, appointment_id):
         else:
             print("Access denied - invalid user type")
             return JsonResponse({'error': 'Access denied'}, status=403)
+
+        # Additional chec for cancelled status
+        if appointment.status == 'cancelled':
+            return JsonResponse({'error': 'Cannot access prescriptions for cancelled appointments'}, status=403)
 
         print(f"Found appointment: {appointment}")
 
