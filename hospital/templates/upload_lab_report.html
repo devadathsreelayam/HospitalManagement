@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="mb-0">
+                    <i class="fas fa-file-medical"></i> Upload Lab Report
+                </h4>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <strong>Patient:</strong> {{ patient.get_full_name }}<br>
+                    {% if recent_appointment %}
+                    <strong>Latest Appointment:</strong> {{ recent_appointment.appointment_date|date:"M d, Y" }}
+                    (Token #{{ recent_appointment.token_number }})
+                    {% else %}
+                    <strong>Note:</strong> No recent appointments found. Report will be linked to general patient history.
+                    {% endif %}
+                </div>
+
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Report Type</label>
+                                {{ form.report_type }}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Test Name</label>
+                                {{ form.test_name }}
+                                <div class="form-text">e.g., Complete Blood Count, Chest X-Ray</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Report File</label>
+                        {{ form.report_file }}
+                        <div class="form-text">Upload PDF, JPG, or PNG files (max 10MB)</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Findings / Summary</label>
+                        {{ form.findings }}
+                        <div class="form-text">Key findings or test results summary</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Notes for Patient</label>
+                        {{ form.notes }}
+                        <div class="form-text">Additional information or instructions for the patient</div>
+                    </div>
+
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'patient_history' patient.id %}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left"></i> Cancel
+                        </a>
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-upload"></i> Upload Report
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

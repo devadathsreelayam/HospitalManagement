@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from hospital.models import Doctor, Patient, User, Appointment, Prescription
+from hospital.models import Doctor, Patient, User, Appointment, Prescription, LabReport
 
 
 # Register your models here.
@@ -42,3 +42,10 @@ class PrescriptionAdmin(admin.ModelAdmin):
     list_display = ('appointment', 'created_at', 'updated_at')
     list_filter = ('created_at',)
     search_fields = ('appointment__patient__user__first_name', 'appointment__patient__user__last_name')
+
+
+@admin.register(LabReport)
+class LabReportAdmin(admin.ModelAdmin):
+    list_display = ('test_name', 'appointment', 'doctor', 'report_type', 'uploaded_at')
+    list_filter = ('report_type', 'uploaded_at')
+    search_fields = ('test_name', 'appointment__patient__user__first_name')

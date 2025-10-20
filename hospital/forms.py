@@ -1,6 +1,6 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
-from .models import User, Patient
+from .models import User, Patient, LabReport
 
 
 class PatientRegistrationForm(UserCreationForm):
@@ -35,3 +35,13 @@ class PatientRegistrationForm(UserCreationForm):
                 emergency_contact=self.cleaned_data['emergency_contact']
             )
         return user
+
+
+class LabReportForm(forms.ModelForm):
+    class Meta:
+        model = LabReport
+        fields = ['report_type', 'test_name', 'report_file', 'findings', 'notes']
+        widgets = {
+            'findings': forms.Textarea(attrs={'rows': 3}),
+            'notes': forms.Textarea(attrs={'rows': 2}),
+        }

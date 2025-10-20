@@ -176,3 +176,31 @@ class Prescription(models.Model):
 
     def __str__(self):
         return f"Prescription for {self.appointment.patient.get_full_name()}"
+
+
+class LabReport(models.Model):
+    REPORT_TYPES = [
+        ('blood_test', 'Blood Test'),
+        ('urine_test', 'Urine Test'),
+        ('xray', 'X-Ray'),
+        ('mri', 'MRI'),
+        ('ct_scan', 'CT Scan'),
+        ('ultrasound', 'Ultrasound'),
+        ('ecg', 'ECG'),
+        ('other', 'Other'),
+    ]
+
+    appointment = models.ForeignKey(Appointment, on_delete=models.CASCADE, related_name='lab_reports')
+    doctor = models.ForeignKey(Doctor, on_delete=models.CASCADE)  # Doctor who uploaded
+    report_type = models.CharField(max_length=50, choices=REPORT_TYPES, default='blood_test')
+    test_name = models.CharField(max_length=200)  # e.g., "Complete Blood Count"
+    report_file = models.FileField(upload_to='lab_reports/')
+    findings = models.TextField(blank=True, help_text="Key findings or summary")
+    notes = models.TextField(blank=True, help_text="Additional notes for patient")
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.test_name} - {self.appointment.patient.get_full_name()}"
+
+    class Meta:
+        ordering = ['-uploaded_at']

@@ -8,8 +8,8 @@ from django.contrib.auth import login, authenticate, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 
-from hospital.models import Doctor, Appointment, Prescription, User, Patient
-from .forms import PatientRegistrationForm
+from hospital.models import Doctor, Appointment, Prescription, User, Patient, LabReport
+from .forms import PatientRegistrationForm, LabReportForm
 
 
 def index(request):
@@ -561,9 +561,20 @@ def patient_history(request, patient_id):
         appointments = Appointment.objects.filter(
             patient=patient_user,
             doctor=request.user.doctor
-        ).select_related('prescription').order_by('-appointment_date', '-created_at')
+        ).select_related('prescription').prefetch_related('lab_reports').order_by('-appointment_date', '-created_at')
 
-        # Get return date from URL parameters or default to today
+        # Get ALL lab reports for this patient (combined view)
+        lab_reports = LabReport.objects.filter(
+            appointment__patient=patient_user,
+            doctor=request.user.doctor
+        ).select_related('appointment').order_by('-uploaded_at')
+
+        # Calculate lab report statistics
+        unique_report_types = lab_reports.values('report_type').distinct().count()
+        latest_report = lab_reports.first()
+        oldest_report = lab_reports.last()
+
+        # Get return date from URL parameters
         return_date = request.GET.get('return_date', timezone.now().date().strftime('%Y-%m-%d'))
 
         context = {
@@ -571,7 +582,12 @@ def patient_history(request, patient_id):
             'patient_profile': patient_profile,
             'appointments': appointments,
             'doctor': request.user.doctor,
-            'return_date': return_date,  # Pass this to template
+            'return_date': return_date,
+            'lab_reports': lab_reports,
+            'unique_report_types': unique_report_types,
+            'latest_report_date': latest_report.uploaded_at if latest_report else None,
+            'oldest_report_date': oldest_report.uploaded_at if oldest_report else None,
+            'today': timezone.now().date(),
         }
         return render(request, 'patient_history.html', context)
 
@@ -662,6 +678,10 @@ def patient_doctor_history(request, doctor_id):
         except Prescription.DoesNotExist:
             continue
 
+    has_lab_reports = LabReport.objects.filter(
+        appointment__in=appointments
+    ).exists()
+
     # Calculate statistics for this doctor
     total_visits = appointments.count()
     completed_visits = appointments.filter(status='completed').count()
@@ -677,6 +697,63 @@ def patient_doctor_history(request, doctor_id):
         'last_visit': last_visit,
         'has_prescriptions': has_prescriptions,
         'today': timezone.now().date(),  # Add this for template
+        'has_lab_reports': has_lab_reports,
     }
 
     return render(request, 'patient_doctor_history.html', context)
+
+
+@login_required
+def upload_lab_report(request, patient_id):
+    """Upload lab report for a patient"""
+    if request.user.user_type != 'doctor':
+        messages.error(request, 'Access denied.')
+        return redirect('dashboard')
+
+    patient = get_object_or_404(User, id=patient_id, user_type='patient')
+
+    # Get the most recent appointment
+    recent_appointment = Appointment.objects.filter(
+        patient=patient,
+        doctor=request.user.doctor
+    ).order_by('-appointment_date').first()
+
+    if request.method == 'POST':
+        form = LabReportForm(request.POST, request.FILES)
+        if form.is_valid():
+            lab_report = form.save(commit=False)
+            lab_report.appointment = recent_appointment
+            lab_report.doctor = request.user.doctor
+            lab_report.save()
+
+            messages.success(request, f'Lab report "{lab_report.test_name}" uploaded successfully!')
+            # FIX: Add patient_id argument to the redirect
+            return redirect('patient_history', patient_id=patient_id)
+    else:
+        form = LabReportForm()
+
+    context = {
+        'form': form,
+        'patient': patient,
+        'recent_appointment': recent_appointment,
+    }
+    return render(request, 'upload_lab_report.html', context)
+
+
+@login_required
+def delete_lab_report(request, report_id):
+    """Delete a lab report"""
+    if request.user.user_type != 'doctor':
+        messages.error(request, 'Access denied.')
+        return redirect('dashboard')
+
+    lab_report = get_object_or_404(LabReport, id=report_id, doctor=request.user.doctor)
+
+    if request.method == 'POST':
+        patient_id = lab_report.appointment.patient.id  # Get patient_id from the lab report
+        lab_report.delete()
+        messages.success(request, 'Lab report deleted successfully!')
+        # FIX: Add patient_id argument
+        return redirect('patient_history', patient_id=patient_id)
+
+    return redirect('doctor_dashboard')

@@ -143,6 +143,40 @@
     </div>
 </div>
 
+<!-- Add this after the appointments timeline -->
+{% if has_lab_reports %}
+<div class="card mt-4">
+    <div class="card-header">
+        <h5 class="mb-0">Lab Reports</h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            {% for appointment in appointments %}
+                {% for report in appointment.lab_reports.all %}
+                    <div class="col-md-6 mb-3">
+                        <div class="card border">
+                            <div class="card-body">
+                                <h6 class="card-title">{{ report.test_name }}</h6>
+                                <p class="card-text text-muted small">
+                                    {{ report.get_report_type_display }} •
+                                    {{ report.uploaded_at|date:"M d, Y" }}
+                                </p>
+                                {% if report.findings %}
+                                <p class="card-text"><strong>Findings:</strong> {{ report.findings|truncatewords:20 }}</p>
+                                {% endif %}
+                                <a href="{{ report.report_file.url }}" class="btn btn-outline-primary btn-sm" target="_blank">
+                                    <i class="fas fa-download"></i> Download Report
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endif %}
+
 <!-- Prescription View Modal -->
 <div class="modal fade" id="prescriptionModal" tabindex="-1">
     <div class="modal-dialog modal-lg">

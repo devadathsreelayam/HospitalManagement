@@ -1,4 +1,7 @@
+from django.conf.urls.static import static
+from django.conf import settings
 from django.urls import path
+
 from . import views
 
 
@@ -23,4 +26,9 @@ urlpatterns = [
     path('patient_history/<int:patient_id>', views.patient_history, name='patient_history'),
     path('patient/medical-history/', views.patient_treatment_history, name='patient_treatment_history'),
     path('patient/medical-history/doctor/<int:doctor_id>/', views.patient_doctor_history, name='patient_doctor_history'),
+    path('lab-report/upload/<int:patient_id>/', views.upload_lab_report, name='upload_lab_report'),
+    path('lab-report/delete/<int:report_id>/', views.delete_lab_report, name='delete_lab_report'),
 ]
+
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

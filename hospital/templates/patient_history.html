@@ -1,4 +1,3 @@
-<!-- templates/hospital/patient_history.html -->
 {% extends 'base.html' %}
 
 {% block content %}
@@ -10,64 +9,17 @@
                 <p class="text-muted">
                     {{ patient_user.get_full_name }} •
                     {{ patient_profile.get_gender_display }} •
-                    {{ patient_profile.date_of_birth|date:"F d, Y" }} ({{ patient_profile.date_of_birth|timesince }} old)
+                    {{ patient_profile.date_of_birth|timesince }} old
                 </p>
             </div>
-            <!-- Back Button with return date -->
-            <a href="{% url 'doctor_dashboard' %}?date={{ return_date }}"
-               class="btn btn-outline-primary">
+            <a href="{% url 'doctor_dashboard' %}?date={{ return_date }}" class="btn btn-outline-primary">
                 <i class="fas fa-arrow-left"></i> Back to Dashboard
             </a>
         </div>
     </div>
 </div>
 
-<!-- Patient Summary Cards -->
-<div class="row mb-4">
-    <div class="col-md-3">
-        <div class="card text-center">
-            <div class="card-body">
-                <h4 class="text-primary">{{ appointments.count }}</h4>
-                <p class="text-muted mb-0">Total Visits</p>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card text-center">
-            <div class="card-body">
-                <h4 class="text-success">{{ appointments|length|default:0 }}</h4>
-                <p class="text-muted mb-0">With You</p>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card text-center">
-            <div class="card-body">
-                <h4 class="text-info">
-                    {% if appointments %}
-                        {{ appointments.0.appointment_date|date:"M d, Y" }}
-                    {% else %}
-                        -
-                    {% endif %}
-                </h4>
-                <p class="text-muted mb-0">Last Visit</p>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card text-center">
-            <div class="card-body">
-                <h4 class="text-warning">
-                    {% with completed=appointments|length %}
-                        {{ completed }}
-                    {% endwith %}
-                </h4>
-                <p class="text-muted mb-0">Completed</p>
-            </div>
-        </div>
-    </div>
-</div>
-
+<!-- Appointment History Section -->
 <div class="row">
     <div class="col-md-12">
         <div class="card">
@@ -166,15 +118,6 @@
                         </tbody>
                     </table>
                 </div>
-
-                <!-- Last Updated Info -->
-                <div class="mt-3 text-muted">
-                    <small>
-                        <i class="fas fa-info-circle"></i>
-                        Last updated: {% now "F j, Y g:i A" %}
-                    </small>
-                </div>
-
                 {% else %}
                 <div class="text-center py-5">
                     <div class="text-muted mb-3">
@@ -182,8 +125,144 @@
                     </div>
                     <h4 class="text-muted">No Appointment History Found</h4>
                     <p class="text-muted">This patient has no previous appointments with you.</p>
-                    <a href="{% url 'doctor_dashboard' %}?date={{ return_date }}" class="btn btn-primary mt-2">
-                        <i class="fas fa-arrow-left"></i> Return to Dashboard
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Combined Lab Reports Section -->
+<div class="row mt-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">All Lab Reports</h5>
+                <a href="{% url 'upload_lab_report' patient_user.id %}" class="btn btn-success">
+                    <i class="fas fa-plus"></i> Upload New Report
+                </a>
+            </div>
+            <div class="card-body">
+                {% if lab_reports %}
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Test Name</th>
+                                <th>Type</th>
+                                <th>Related Appointment</th>
+                                <th>Uploaded Date</th>
+                                <th>Findings</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for report in lab_reports %}
+                            <tr>
+                                <td>
+                                    <strong>{{ report.test_name }}</strong>
+                                </td>
+                                <td>
+                                    <span class="badge bg-info">{{ report.get_report_type_display }}</span>
+                                </td>
+                                <td>
+                                    {% if report.appointment %}
+                                    <small>
+                                        {{ report.appointment.appointment_date|date:"M d, Y" }}<br>
+                                        <span class="text-muted">Token #{{ report.appointment.token_number }}</span>
+                                    </small>
+                                    {% else %}
+                                    <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {{ report.uploaded_at|date:"M d, Y" }}<br>
+                                    <small class="text-muted">{{ report.uploaded_at|time:"g:i A" }}</small>
+                                </td>
+                                <td>
+                                    {% if report.findings %}
+                                    <button type="button" class="btn btn-sm btn-outline-info"
+                                            data-bs-toggle="tooltip" title="{{ report.findings }}">
+                                        <i class="fas fa-eye"></i> View Findings
+                                    </button>
+                                    {% else %}
+                                    <span class="text-muted">No findings</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        <a href="{{ report.report_file.url }}"
+                                           class="btn btn-outline-primary"
+                                           target="_blank"
+                                           data-bs-toggle="tooltip"
+                                           title="Download {{ report.test_name }}">
+                                            <i class="fas fa-download"></i> Download
+                                        </a>
+                                        <form method="post"
+                                              action="{% url 'delete_lab_report' report.id %}"
+                                              style="display: inline;">
+                                            {% csrf_token %}
+                                            <button type="submit"
+                                                    class="btn btn-outline-danger"
+                                                    onclick="return confirm('Are you sure you want to delete {{ report.test_name }}?')"
+                                                    data-bs-toggle="tooltip"
+                                                    title="Delete this report">
+                                                <i class="fas fa-trash"></i>Delete
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Lab Reports Summary -->
+                <div class="row mt-4">
+                    <div class="col-md-3">
+                        <div class="card text-center bg-primary text-white">
+                            <div class="card-body py-2">
+                                <h5 class="mb-0">{{ lab_reports.count }}</h5>
+                                <small>Total Reports</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card text-center bg-success text-white">
+                            <div class="card-body py-2">
+                                <h5 class="mb-0">{{ unique_report_types }}</h5>
+                                <small>Test Types</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card text-center bg-info text-white">
+                            <div class="card-body py-2">
+                                <h5 class="mb-0">{{ latest_report_date|date:"M d"|default:"-" }}</h5>
+                                <small>Latest Report</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card text-center bg-warning text-white">
+                            <div class="card-body py-2">
+                                <h5 class="mb-0">{{ oldest_report_date|date:"M d"|default:"-" }}</h5>
+                                <small>First Report</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {% else %}
+                <div class="text-center py-5">
+                    <div class="text-muted mb-3">
+                        <i class="fas fa-file-medical fa-3x"></i>
+                    </div>
+                    <h5 class="text-muted">No Lab Reports Available</h5>
+                    <p class="text-muted">No laboratory reports have been uploaded for this patient yet.</p>
+                    <a href="{% url 'upload_lab_report' patient_user.id %}" class="btn btn-success mt-2">
+                        <i class="fas fa-upload"></i> Upload First Report
                     </a>
                 </div>
                 {% endif %}
@@ -191,6 +270,7 @@
         </div>
     </div>
 </div>
+
 
 <!-- Reason Modal -->
 <div class="modal fade" id="reasonModal" tabindex="-1">
@@ -205,9 +285,7 @@
                 <p><strong>Date:</strong> <span id="reasonAppointmentDate"></span></p>
                 <div class="mb-3">
                     <label class="form-label"><strong>Reason for Visit:</strong></label>
-                    <div class="border p-3 bg-light rounded" id="reasonText" style="min-height: 100px; white-space: pre-wrap;">
-                        <!-- Reason will be inserted here -->
-                    </div>
+                    <div class="border p-3 bg-light rounded" id="reasonText" style="min-height: 100px; white-space: pre-wrap;"></div>
                 </div>
             </div>
             <div class="modal-footer">
@@ -234,11 +312,7 @@
                     <input type="hidden" id="isEditable" name="is_editable">
                     <div class="mb-3">
                         <label for="prescriptionText" class="form-label">Prescription Details</label>
-                        <textarea class="form-control" id="prescriptionText" name="prescription_text"
-                                  rows="12" placeholder="Enter prescription details, medications, dosage, instructions..."></textarea>
-                        <div class="form-text">
-                            Include medications, dosage, frequency, duration, and any special instructions.
-                        </div>
+                        <textarea class="form-control" id="prescriptionText" name="prescription_text" rows="12"></textarea>
                     </div>
                 </form>
             </div>
@@ -251,11 +325,52 @@
         </div>
     </div>
 </div>
+
+<!-- Findings Modal -->
+<div class="modal fade" id="findingsModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Lab Report Findings</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p><strong>Test:</strong> <span id="findingsTestName"></span></p>
+                <div class="mb-3">
+                    <label class="form-label"><strong>Findings:</strong></label>
+                    <div class="border p-3 bg-light rounded" id="findingsText" style="min-height: 100px; white-space: pre-wrap;"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}
 
 {% block extra_js %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // Initialize tooltips
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl)
+    });
+
+    // Findings Modal
+    const findingsModal = new bootstrap.Modal(document.getElementById('findingsModal'));
+
+    document.querySelectorAll('.btn-outline-info').forEach(button => {
+        if (button.title && button.title !== 'View') {
+            button.addEventListener('click', function() {
+                document.getElementById('findingsTestName').textContent = this.closest('tr').querySelector('strong').textContent;
+                document.getElementById('findingsText').textContent = this.title;
+                findingsModal.show();
+            });
+        }
+    });
+
     // Reason Modal Handler
     const reasonModal = new bootstrap.Modal(document.getElementById('reasonModal'));
     const reasonPatientName = document.getElementById('reasonPatientName');
