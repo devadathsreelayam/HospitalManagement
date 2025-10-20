@@ -1,0 +1,240 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h2 class="text-primary">Lab Reports Statistics</h2>
+                <p class="text-muted">Insights and trends for lab reports</p>
+            </div>
+            <a href="{% url 'admin_lab_reports_list' %}" class="btn btn-outline-primary">
+                <i class="fas fa-arrow-left me-2"></i>Back to List
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Overview Cards -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body text-center">
+                <h3 class="text-primary">{{ total_reports }}</h3>
+                <p class="text-muted mb-0">Total Reports</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body text-center">
+                <h3 class="text-success">{{ unique_patients }}</h3>
+                <p class="text-muted mb-0">Unique Patients</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body text-center">
+                <h3 class="text-info">{{ unique_doctors }}</h3>
+                <p class="text-muted mb-0">Doctors Involved</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body text-center">
+                <h3 class="text-warning">{{ start_date|date:"M d" }} - {{ end_date|date:"M d" }}</h3>
+                <p class="text-muted mb-0">Date Range</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Report Type Distribution -->
+    <div class="col-md-6 mb-4">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-transparent border-0">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-chart-pie me-2 text-primary"></i>Report Type Distribution
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if type_distribution %}
+                <div class="list-group list-group-flush">
+                    {% for type in type_distribution %}
+                    <div class="list-group-item border-0 px-0 py-2">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span>{{ type.report_type|title }}</span>
+                            <span class="badge bg-primary">{{ type.count }}</span>
+                        </div>
+                        <div class="progress mt-1" style="height: 5px;">
+                            {% widthratio type.count total_reports 100 as percentage %}
+                            <div class="progress-bar" role="progressbar"
+                                 style="width: {{ percentage }}%">
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center py-3">
+                    <p class="text-muted mb-0">No data available</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Doctor Statistics -->
+    <div class="col-md-6 mb-4">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-transparent border-0">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-user-md me-2 text-success"></i>Top Doctors by Reports
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if doctor_stats %}
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Doctor</th>
+                                <th>Specialization</th>
+                                <th>Reports</th>
+                                <th>Patients</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for stat in doctor_stats|slice:":5" %}
+                            <tr>
+                                <td>Dr. {{ stat.doctor__user__first_name }} {{ stat.doctor__user__last_name }}</td>
+                                <td>{{ stat.doctor__specialization|title }}</td>
+                                <td>{{ stat.total_reports }}</td>
+                                <td>{{ stat.unique_patients }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-3">
+                    <p class="text-muted mb-0">No data available</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Additional Statistics Sections -->
+<div class="row">
+    <!-- Most Common Tests -->
+    <div class="col-md-6 mb-4">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-transparent border-0">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-flask me-2 text-info"></i>Most Common Tests
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if common_tests %}
+                <div class="list-group list-group-flush">
+                    {% for test in common_tests %}
+                    <div class="list-group-item border-0 px-0 py-2">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span>{{ test.test_name }}</span>
+                            <span class="badge bg-info">{{ test.count }} reports</span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center py-3">
+                    <p class="text-muted mb-0">No test data available</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Monthly Trends -->
+    <div class="col-md-6 mb-4">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-transparent border-0">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-trending-up me-2 text-warning"></i>Monthly Trends
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if monthly_trend %}
+                <div class="list-group list-group-flush">
+                    {% for month in monthly_trend %}
+                    <div class="list-group-item border-0 px-0 py-2">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span>{{ month.year }}-{{ month.month|stringformat:"02d" }}</span>
+                            <span class="badge bg-warning">{{ month.count }} reports</span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center py-3">
+                    <p class="text-muted mb-0">No monthly trend data available</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Daily Uploads -->
+<div class="row">
+    <div class="col-md-12 mb-4">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-transparent border-0">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-calendar-day me-2 text-success"></i>Daily Upload Activity (Last 30 Days)
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if daily_uploads %}
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Reports Uploaded</th>
+                                <th>Activity Level</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for day in daily_uploads %}
+                            <tr>
+                                <td>{{ day.upload_date|date:"M d, Y" }}</td>
+                                <td>{{ day.count }}</td>
+                                <td>
+                                    {% if day.count > 10 %}
+                                    <span class="badge bg-success">High</span>
+                                    {% elif day.count > 5 %}
+                                    <span class="badge bg-warning">Medium</span>
+                                    {% else %}
+                                    <span class="badge bg-secondary">Low</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-3">
+                    <p class="text-muted mb-0">No daily upload data available</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

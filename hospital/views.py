@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 from django.utils import timezone
 
-from django.db.models import Q
+from django.db.models import Q, Count
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login, authenticate, logout
@@ -1111,3 +1111,326 @@ def admin_patient_toggle_active(request, patient_id):
     messages.success(request, f'Patient {patient.user.get_full_name()} has been {status}.')
 
     return redirect('admin_patients_list')
+
+
+# views.py - Add these views
+
+@login_required
+def admin_appointments_list(request):
+    """Admin view to list and manage all appointments"""
+    if request.user.user_type != 'admin' and not request.user.is_staff:
+        messages.error(request, 'Access denied.')
+        return redirect('dashboard')
+
+    # Get filter parameters
+    status_filter = request.GET.get('status', '')
+    date_filter = request.GET.get('date', '')
+    doctor_filter = request.GET.get('doctor', '')
+    search_query = request.GET.get('search', '')
+
+    # Get all appointments with related data
+    appointments = Appointment.objects.select_related(
+        'patient', 'doctor', 'doctor__user'
+    ).prefetch_related('prescription').order_by('-appointment_date', '-created_at')
+
+    # Apply filters
+    if status_filter:
+        appointments = appointments.filter(status=status_filter)
+
+    if date_filter:
+        appointments = appointments.filter(appointment_date=date_filter)
+
+    if doctor_filter:
+        appointments = appointments.filter(doctor_id=doctor_filter)
+
+    if search_query:
+        appointments = appointments.filter(
+            Q(patient__first_name__icontains=search_query) |
+            Q(patient__last_name__icontains=search_query) |
+            Q(doctor__user__first_name__icontains=search_query) |
+            Q(doctor__user__last_name__icontains=search_query) |
+            Q(reason__icontains=search_query)
+        )
+
+    # Get doctors for filter dropdown
+    doctors = Doctor.objects.select_related('user').all()
+
+    # Calculate statistics
+    total_appointments = appointments.count()
+    scheduled_count = appointments.filter(status='scheduled').count()
+    completed_count = appointments.filter(status='completed').count()
+    cancelled_count = appointments.filter(status='cancelled').count()
+
+    context = {
+        'appointments': appointments,
+        'doctors': doctors,
+        'status_filter': status_filter,
+        'date_filter': date_filter,
+        'doctor_filter': doctor_filter,
+        'search_query': search_query,
+        'total_appointments': total_appointments,
+        'scheduled_count': scheduled_count,
+        'completed_count': completed_count,
+        'cancelled_count': cancelled_count,
+        'status_choices': ['scheduled', 'completed', 'cancelled'],
+    }
+    return render(request, 'admin_appointments_list.html', context)
+
+
+@login_required
+def admin_appointments_analytics(request):
+    """Admin view for appointment analytics and insights"""
+    if request.user.user_type != 'admin' and not request.user.is_staff:
+        messages.error(request, 'Access denied.')
+        return redirect('dashboard')
+
+    # Date range for analytics (last 30 days)
+    end_date = timezone.now().date()
+    start_date = end_date - timedelta(days=30)
+
+    # Get appointments in date range
+    appointments = Appointment.objects.filter(
+        appointment_date__range=[start_date, end_date]
+    ).select_related('doctor', 'doctor__user')
+
+    # Daily appointments count
+    daily_counts = appointments.values('appointment_date').annotate(
+        total=Count('id'),
+        completed=Count('id', filter=Q(status='completed')),
+        scheduled=Count('id', filter=Q(status='scheduled')),
+        cancelled=Count('id', filter=Q(status='cancelled'))
+    ).order_by('appointment_date')
+
+    # Doctor-wise statistics
+    doctor_stats = appointments.values(
+        'doctor__user__first_name',
+        'doctor__user__last_name',
+        'doctor__specialization'
+    ).annotate(
+        total=Count('id'),
+        completed=Count('id', filter=Q(status='completed')),
+    ).order_by('-total')
+
+    # Calculate completion rate for each doctor
+    for stat in doctor_stats:
+        stat['completion_rate'] = (stat['completed'] * 100.0 / stat['total']) if stat['total'] > 0 else 0
+
+    # Status distribution
+    status_distribution = appointments.values('status').annotate(
+        count=Count('id')
+    ).order_by('-count')
+
+    # Weekly trends - SQLite compatible
+    weekly_trends = []
+    current_date = start_date
+    while current_date <= end_date:
+        week_start = current_date
+        week_end = current_date + timedelta(days=6)
+        if week_end > end_date:
+            week_end = end_date
+
+        week_appointments = appointments.filter(
+            appointment_date__range=[week_start, week_end]
+        ).count()
+
+        weekly_trends.append({
+            'week': f"{week_start.strftime('%m/%d')}-{week_end.strftime('%m/%d')}",
+            'total': week_appointments
+        })
+
+        current_date = week_end + timedelta(days=1)
+
+    # Peak hours analysis - SQLite compatible
+    peak_hours = []
+    for hour in range(8, 18):  # From 8 AM to 5 PM
+        hour_appointments = appointments.filter(
+            estimated_time__hour=hour
+        ).count()
+
+        if hour_appointments > 0:
+            peak_hours.append({
+                'estimated_time__hour': hour,
+                'count': hour_appointments
+            })
+
+    # Sort by count descending
+    peak_hours.sort(key=lambda x: x['count'], reverse=True)
+
+    total_appointments_count = appointments.count()
+    completed_appointments_count = appointments.filter(status='completed').count()
+    completion_rate = (
+                completed_appointments_count * 100.0 / total_appointments_count) if total_appointments_count > 0 else 0
+
+    context = {
+        'start_date': start_date,
+        'end_date': end_date,
+        'daily_counts': list(daily_counts),
+        'doctor_stats': doctor_stats,
+        'status_distribution': list(status_distribution),
+        'weekly_trends': weekly_trends,
+        'peak_hours': peak_hours,
+        'total_appointments': total_appointments_count,
+        'completion_rate': completion_rate,
+    }
+    return render(request, 'admin_appointments_analytics.html', context)
+
+
+@login_required
+def admin_lab_reports_list(request):
+    """Admin view to list and manage all lab reports"""
+    if request.user.user_type != 'admin' and not request.user.is_staff:
+        messages.error(request, 'Access denied.')
+        return redirect('dashboard')
+
+    # Get filter parameters
+    report_type_filter = request.GET.get('report_type', '')
+    doctor_filter = request.GET.get('doctor', '')
+    date_from = request.GET.get('date_from', '')
+    date_to = request.GET.get('date_to', '')
+    search_query = request.GET.get('search', '')
+
+    # Get all lab reports with related data
+    lab_reports = LabReport.objects.select_related(
+        'appointment',
+        'appointment__patient',
+        'doctor',
+        'doctor__user'
+    ).order_by('-uploaded_at')
+
+    # Apply filters
+    if report_type_filter:
+        lab_reports = lab_reports.filter(report_type=report_type_filter)
+
+    if doctor_filter:
+        lab_reports = lab_reports.filter(doctor_id=doctor_filter)
+
+    if date_from:
+        lab_reports = lab_reports.filter(uploaded_at__date__gte=date_from)
+
+    if date_to:
+        lab_reports = lab_reports.filter(uploaded_at__date__lte=date_to)
+
+    if search_query:
+        lab_reports = lab_reports.filter(
+            Q(test_name__icontains=search_query) |
+            Q(appointment__patient__first_name__icontains=search_query) |
+            Q(appointment__patient__last_name__icontains=search_query) |
+            Q(doctor__user__first_name__icontains=search_query) |
+            Q(doctor__user__last_name__icontains=search_query) |
+            Q(findings__icontains=search_query)
+        )
+
+    # Get doctors and report types for filter dropdowns
+    doctors = Doctor.objects.select_related('user').all()
+    report_types = LabReport.REPORT_TYPES
+
+    # Calculate statistics
+    total_reports = lab_reports.count()
+    today_reports = lab_reports.filter(uploaded_at__date=timezone.now().date()).count()
+
+    context = {
+        'lab_reports': lab_reports,
+        'doctors': doctors,
+        'report_types': report_types,
+        'report_type_filter': report_type_filter,
+        'doctor_filter': doctor_filter,
+        'date_from': date_from,
+        'date_to': date_to,
+        'search_query': search_query,
+        'total_reports': total_reports,
+        'today_reports': today_reports,
+    }
+    return render(request, 'admin_lab_reports_list.html', context)
+
+
+@login_required
+def admin_lab_reports_statistics(request):
+    """Admin view for lab reports statistics and insights"""
+    if request.user.user_type != 'admin' and not request.user.is_staff:
+        messages.error(request, 'Access denied.')
+        return redirect('dashboard')
+
+    # Date range for statistics (last 30 days)
+    end_date = timezone.now().date()
+    start_date = end_date - timedelta(days=30)
+
+    # Get lab reports in date range
+    lab_reports = LabReport.objects.filter(
+        uploaded_at__date__range=[start_date, end_date]
+    ).select_related('doctor', 'doctor__user', 'appointment', 'appointment__patient')
+
+    # Report type distribution
+    type_distribution = lab_reports.values('report_type').annotate(
+        count=Count('id')
+    ).order_by('-count')
+
+    # Daily upload counts - SQLite compatible
+    daily_uploads = []
+    current_date = start_date
+    while current_date <= end_date:
+        day_count = lab_reports.filter(uploaded_at__date=current_date).count()
+        if day_count > 0:
+            daily_uploads.append({
+                'upload_date': current_date,
+                'count': day_count
+            })
+        current_date += timedelta(days=1)
+
+    # Doctor-wise statistics
+    doctor_stats = lab_reports.values(
+        'doctor__user__first_name',
+        'doctor__user__last_name',
+        'doctor__specialization'
+    ).annotate(
+        total_reports=Count('id'),
+        unique_patients=Count('appointment__patient', distinct=True)
+    ).order_by('-total_reports')
+
+    # Monthly trend - SQLite compatible
+    monthly_trend = []
+    current_month = start_date.replace(day=1)
+    while current_month <= end_date:
+        # Calculate end of month
+        if current_month.month == 12:
+            next_month = current_month.replace(year=current_month.year + 1, month=1, day=1)
+        else:
+            next_month = current_month.replace(month=current_month.month + 1, day=1)
+
+        month_end = next_month - timedelta(days=1)
+        if month_end > end_date:
+            month_end = end_date
+
+        month_count = lab_reports.filter(
+            uploaded_at__date__range=[current_month, month_end]
+        ).count()
+
+        monthly_trend.append({
+            'year': current_month.year,
+            'month': current_month.month,
+            'count': month_count
+        })
+
+        current_month = next_month
+
+    # Most common tests
+    common_tests = lab_reports.values('test_name').annotate(
+        count=Count('id')
+    ).order_by('-count')[:10]
+
+    total_reports_count = lab_reports.count()
+    unique_patients_count = lab_reports.values('appointment__patient').distinct().count()
+    unique_doctors_count = lab_reports.values('doctor').distinct().count()
+
+    context = {
+        'start_date': start_date,
+        'end_date': end_date,
+        'type_distribution': list(type_distribution),
+        'daily_uploads': daily_uploads,
+        'doctor_stats': doctor_stats,
+        'monthly_trend': monthly_trend,
+        'common_tests': list(common_tests),
+        'total_reports': total_reports_count,
+        'unique_patients': unique_patients_count,
+        'unique_doctors': unique_doctors_count,
+    }
+    return render(request, 'admin_lab_reports_statistics.html', context)

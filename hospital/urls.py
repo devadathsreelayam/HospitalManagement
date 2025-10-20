@@ -38,6 +38,14 @@ urlpatterns = [
     path('admin/patients/', views.admin_patients_list, name='admin_patients_list'),
     path('admin/patients/<int:patient_id>/', views.admin_patient_detail, name='admin_patient_detail'),
     path('admin/patients/<int:patient_id>/toggle-active/', views.admin_patient_toggle_active, name='admin_patient_toggle_active'),
+
+    # Admin Appointments
+    path('admin/appointments/', views.admin_appointments_list, name='admin_appointments_list'),
+    path('admin/appointments/analytics/', views.admin_appointments_analytics, name='admin_appointments_analytics'),
+
+    # Admin Lab Reports
+    path('admin/lab-reports/', views.admin_lab_reports_list, name='admin_lab_reports_list'),
+    path('admin/lab-reports/statistics/', views.admin_lab_reports_statistics, name='admin_lab_reports_statistics'),
 ]
 
 if settings.DEBUG:

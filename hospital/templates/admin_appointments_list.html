@@ -1,0 +1,179 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h2 class="text-primary">Appointment Management</h2>
+                <p class="text-muted">Manage and monitor all appointments</p>
+            </div>
+            <a href="{% url 'admin_appointments_analytics' %}" class="btn btn-info">
+                <i class="fas fa-chart-bar me-2"></i>View Analytics
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Statistics Cards -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body text-center">
+                <h3 class="text-primary">{{ total_appointments }}</h3>
+                <p class="text-muted mb-0">Total Appointments</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body text-center">
+                <h3 class="text-warning">{{ scheduled_count }}</h3>
+                <p class="text-muted mb-0">Scheduled</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body text-center">
+                <h3 class="text-success">{{ completed_count }}</h3>
+                <p class="text-muted mb-0">Completed</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body text-center">
+                <h3 class="text-danger">{{ cancelled_count }}</h3>
+                <p class="text-muted mb-0">Cancelled</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Filters -->
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-3">
+                <label class="form-label">Status</label>
+                <select name="status" class="form-select">
+                    <option value="">All Status</option>
+                    {% for status in status_choices %}
+                    <option value="{{ status }}" {% if status_filter == status %}selected{% endif %}>
+                        {{ status|title }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Date</label>
+                <input type="date" name="date" class="form-control" value="{{ date_filter }}">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Doctor</label>
+                <select name="doctor" class="form-select">
+                    <option value="">All Doctors</option>
+                    {% for doctor in doctors %}
+                    <option value="{{ doctor.id }}" {% if doctor_filter == doctor.id|stringformat:"s" %}selected{% endif %}>
+                        Dr. {{ doctor.user.get_full_name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Search</label>
+                <input type="text" name="search" class="form-control" placeholder="Search..." value="{{ search_query }}">
+            </div>
+            <div class="col-12">
+                <button type="submit" class="btn btn-primary">Apply Filters</button>
+                <a href="{% url 'admin_appointments_list' %}" class="btn btn-outline-secondary">Clear</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Appointments Table -->
+<div class="card border-0 shadow-sm">
+    <div class="card-header bg-transparent border-0 d-flex justify-content-between align-items-center">
+        <h5 class="card-title mb-0">
+            <i class="fas fa-calendar-alt me-2 text-primary"></i>
+            All Appointments ({{ total_appointments }})
+        </h5>
+    </div>
+    <div class="card-body">
+        {% if appointments %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead class="table-light">
+                    <tr>
+                        <th>Patient</th>
+                        <th>Doctor</th>
+                        <th>Date & Time</th>
+                        <th>Token</th>
+                        <th>Status</th>
+                        <th>Reason</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for appointment in appointments %}
+                    <tr>
+                        <td>
+                            <strong>{{ appointment.patient.get_full_name }}</strong>
+                            <br>
+                            <small class="text-muted">{{ appointment.patient.email }}</small>
+                        </td>
+                        <td>
+                            Dr. {{ appointment.doctor.user.get_full_name }}
+                            <br>
+                            <small class="text-muted">{{ appointment.doctor.get_specialization_display }}</small>
+                        </td>
+                        <td>
+                            {{ appointment.appointment_date|date:"M d, Y" }}
+                            <br>
+                            <small class="text-muted">{{ appointment.estimated_time|time:"g:i A" }}</small>
+                        </td>
+                        <td>
+                            <span class="badge bg-secondary">#{{ appointment.token_number }}</span>
+                        </td>
+                        <td>
+                            <span class="badge bg-{% if appointment.status == 'completed' %}success{% elif appointment.status == 'scheduled' %}primary{% else %}danger{% endif %}">
+                                {{ appointment.status|title }}
+                            </span>
+                        </td>
+                        <td>
+                            <small class="text-muted">{{ appointment.reason|truncatewords:5 }}</small>
+                        </td>
+                        <td>
+                            <div class="btn-group btn-group-sm">
+                                <button class="btn btn-outline-info" data-bs-toggle="tooltip" title="View Details">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                {% if appointment.status == 'scheduled' %}
+                                <button class="btn btn-outline-success" data-bs-toggle="tooltip" title="Mark Complete">
+                                    <i class="fas fa-check"></i>
+                                </button>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-5">
+            <i class="fas fa-calendar-times fa-3x text-muted mb-3"></i>
+            <h5 class="text-muted">No Appointments Found</h5>
+            <p class="text-muted">
+                {% if search_query or status_filter or date_filter %}
+                Try adjusting your search criteria
+                {% else %}
+                No appointments have been scheduled yet.
+                {% endif %}
+            </p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
