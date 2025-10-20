@@ -8,9 +8,14 @@
                 <h2>My Medical History</h2>
                 <p class="text-muted">Overview of all your consultations</p>
             </div>
-            <a href="{% url 'patient_dashboard' %}" class="btn btn-outline-secondary">
-                <i class="fas fa-arrow-left"></i> Back to Dashboard
-            </a>
+            <div class="d-flex gap-2">
+                <a href="{% url 'patient_lab_reports' %}" class="btn btn-success">
+                    <i class="fas fa-file-medical"></i> View Lab Reports
+                </a>
+                <a href="{% url 'patient_dashboard' %}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left"></i> Dashboard
+                </a>
+            </div>
         </div>
     </div>
 </div>
