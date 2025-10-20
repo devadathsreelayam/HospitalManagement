@@ -1,6 +1,6 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
-from .models import User, Patient, LabReport
+from .models import User, Patient, LabReport, Doctor
 
 
 class PatientRegistrationForm(UserCreationForm):
@@ -175,3 +175,44 @@ class LabReportForm(forms.ModelForm):
             'findings': forms.Textarea(attrs={'rows': 3}),
             'notes': forms.Textarea(attrs={'rows': 2}),
         }
+
+
+class DoctorUserForm(forms.ModelForm):
+    class Meta:
+        model = User
+        fields = ['username', 'email', 'first_name', 'last_name', 'phone']
+        widgets = {
+            'username': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter username'}),
+            'email': forms.EmailInput(attrs={'class': 'form-control', 'placeholder': 'Enter email address'}),
+            'first_name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter first name'}),
+            'last_name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter last name'}),
+            'phone': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter phone number'}),
+        }
+
+
+class DoctorProfileForm(forms.ModelForm):
+    class Meta:
+        model = Doctor
+        fields = ['qualification', 'specialization', 'start_time', 'end_time', 'available_days', 'max_appointments']
+        widgets = {
+            'qualification': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g., MBBS, MD'}),
+            'specialization': forms.Select(attrs={'class': 'form-select'}),
+            'start_time': forms.TimeInput(attrs={'type': 'time', 'class': 'form-control'}),
+            'end_time': forms.TimeInput(attrs={'type': 'time', 'class': 'form-control'}),
+            'available_days': forms.TextInput(
+                attrs={'class': 'form-control', 'placeholder': 'e.g., Monday,Tuesday,Wednesday'}),
+            'max_appointments': forms.NumberInput(attrs={'class': 'form-control', 'min': '1', 'max': '100'}),
+        }
+
+    def clean_available_days(self):
+        days = self.cleaned_data.get('available_days')
+        if days:
+            # Validate days format
+            valid_days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
+            input_days = [day.strip().lower() for day in days.split(',')]
+
+            for day in input_days:
+                if day not in valid_days:
+                    raise forms.ValidationError(f"Invalid day: {day}. Please use comma-separated day names.")
+
+        return days

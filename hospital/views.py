@@ -9,7 +9,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 
 from hospital.models import Doctor, Appointment, Prescription, User, Patient, LabReport
-from .forms import PatientRegistrationForm, LabReportForm, PatientProfileUpdateForm
+from .forms import PatientRegistrationForm, LabReportForm, PatientProfileUpdateForm, DoctorUserForm, DoctorProfileForm
 
 
 def index(request):
@@ -871,3 +871,158 @@ def patient_profile_update(request):
         'patient_profile': patient_profile,
     }
     return render(request, 'patient_profile_update.html', context)
+
+
+@login_required
+def admin_doctors_list(request):
+    """Admin view to list all doctors"""
+    if request.user.user_type != 'admin' and not request.user.is_staff:
+        messages.error(request, 'Access denied.')
+        return redirect('dashboard')
+
+    # Get search and filter parameters
+    search_query = request.GET.get('search', '')
+    specialization_filter = request.GET.get('specialization', '')
+
+    # Get all doctors
+    doctors = Doctor.objects.select_related('user').all()
+
+    # Apply filters
+    if search_query:
+        doctors = doctors.filter(
+            Q(user__first_name__icontains=search_query) |
+            Q(user__last_name__icontains=search_query) |
+            Q(user__username__icontains=search_query) |
+            Q(specialization__icontains=search_query)
+        )
+
+    if specialization_filter:
+        doctors = doctors.filter(specialization=specialization_filter)
+
+    # Get specializations for filter dropdown
+    specializations = Doctor.SPECIALIZATION_CHOICES
+
+    context = {
+        'doctors': doctors,
+        'specializations': specializations,
+        'search_query': search_query,
+        'selected_specialization': specialization_filter,
+        'total_doctors': doctors.count(),
+    }
+    return render(request, 'admin_doctors_list.html', context)
+
+
+@login_required
+def admin_doctor_detail(request, doctor_id):
+    """Admin view for doctor details"""
+    if request.user.user_type != 'admin' and not request.user.is_staff:
+        messages.error(request, 'Access denied.')
+        return redirect('dashboard')
+
+    doctor = get_object_or_404(Doctor, id=doctor_id)
+
+    # Get doctor's recent appointments
+    recent_appointments = Appointment.objects.filter(
+        doctor=doctor
+    ).select_related('patient').order_by('-appointment_date')[:10]
+
+    # Get doctor's statistics
+    total_appointments = Appointment.objects.filter(doctor=doctor).count()
+    completed_appointments = Appointment.objects.filter(doctor=doctor, status='completed').count()
+    today_appointments = Appointment.objects.filter(doctor=doctor, appointment_date=timezone.now().date()).count()
+
+    context = {
+        'doctor': doctor,
+        'recent_appointments': recent_appointments,
+        'total_appointments': total_appointments,
+        'completed_appointments': completed_appointments,
+        'today_appointments': today_appointments,
+    }
+    return render(request, 'admin_doctor_detail.html', context)
+
+
+@login_required
+def admin_doctor_create(request):
+    """Admin view to create new doctor"""
+    if request.user.user_type != 'admin' and not request.user.is_staff:
+        messages.error(request, 'Access denied.')
+        return redirect('dashboard')
+
+    if request.method == 'POST':
+        # Handle form submission
+        user_form = DoctorUserForm(request.POST)
+        doctor_form = DoctorProfileForm(request.POST)
+
+        if user_form.is_valid() and doctor_form.is_valid():
+            # Create user first
+            user = user_form.save(commit=False)
+            user.user_type = 'doctor'
+            user.set_password('defaultpassword123')  # Set default password
+            user.save()
+
+            # Create doctor profile
+            doctor = doctor_form.save(commit=False)
+            doctor.user = user
+            doctor.save()
+
+            messages.success(request, f'Doctor {user.get_full_name()} created successfully!')
+            return redirect('admin_doctors_list')
+    else:
+        user_form = DoctorUserForm()
+        doctor_form = DoctorProfileForm()
+
+    context = {
+        'user_form': user_form,
+        'doctor_form': doctor_form,
+    }
+    return render(request, 'admin_doctor_create.html', context)
+
+
+@login_required
+def admin_doctor_edit(request, doctor_id):
+    """Admin view to edit doctor"""
+    if request.user.user_type != 'admin' and not request.user.is_staff:
+        messages.error(request, 'Access denied.')
+        return redirect('dashboard')
+
+    doctor = get_object_or_404(Doctor, id=doctor_id)
+
+    if request.method == 'POST':
+        user_form = DoctorUserForm(request.POST, instance=doctor.user)
+        doctor_form = DoctorProfileForm(request.POST, instance=doctor)
+
+        if user_form.is_valid() and doctor_form.is_valid():
+            user_form.save()
+            doctor_form.save()
+
+            messages.success(request, f'Doctor {doctor.user.get_full_name()} updated successfully!')
+            return redirect('admin_doctor_detail', doctor_id=doctor.id)
+    else:
+        user_form = DoctorUserForm(instance=doctor.user)
+        doctor_form = DoctorProfileForm(instance=doctor)
+
+    context = {
+        'doctor': doctor,
+        'user_form': user_form,
+        'doctor_form': doctor_form,
+    }
+    return render(request, 'admin_doctor_edit.html', context)
+
+
+@login_required
+def admin_doctor_toggle_active(request, doctor_id):
+    """Toggle doctor active status"""
+    if request.user.user_type != 'admin' and not request.user.is_staff:
+        messages.error(request, 'Access denied.')
+        return redirect('dashboard')
+
+    doctor = get_object_or_404(Doctor, id=doctor_id)
+
+    # For now, we'll use is_active on User model
+    doctor.user.is_active = not doctor.user.is_active
+    doctor.user.save()
+
+    status = "activated" if doctor.user.is_active else "deactivated"
+    messages.success(request, f'Doctor {doctor.user.get_full_name()} has been {status}.')
+
+    return redirect('admin_doctors_list')
