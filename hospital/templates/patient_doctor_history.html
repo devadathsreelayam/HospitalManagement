@@ -1,0 +1,262 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h2>Treatment History with Dr. {{ doctor.user.get_full_name }}</h2>
+                <p class="text-muted">
+                    {{ doctor.get_specialization_display }} • {{ doctor.qualification }}
+                </p>
+            </div>
+            <div>
+                <a href="{% url 'patient_treatment_history' %}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left"></i> All Doctors
+                </a>
+                <a href="{% url 'patient_dashboard' %}" class="btn btn-outline-primary">
+                    <i class="fas fa-tachometer-alt"></i> Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Doctor Specific Statistics -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card text-center bg-primary text-white">
+            <div class="card-body">
+                <h3>{{ total_visits }}</h3>
+                <p class="mb-0">Total Visits</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center bg-success text-white">
+            <div class="card-body">
+                <h3>{{ completed_visits }}</h3>
+                <p class="mb-0">Completed</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center bg-info text-white">
+            <div class="card-body">
+                <h5>{{ first_visit|date:"M d, Y" }}</h5>
+                <p class="mb-0">First Visit</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center bg-warning text-white">
+            <div class="card-body">
+                <h5>{{ last_visit|date:"M d, Y" }}</h5>
+                <p class="mb-0">Last Visit</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Detailed Appointment History -->
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Consultation Timeline</h5>
+                <span class="badge bg-primary">{{ appointments.count }} appointment(s)</span>
+            </div>
+            <div class="card-body">
+                {% if appointments %}
+                <div class="timeline">
+                    {% for appointment in appointments %}
+                    <div class="timeline-item mb-4">
+                        <div class="card {% if appointment.status == 'completed' %}border-success{% else %}border-warning{% endif %}">
+                            <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                                <div>
+                                    <strong>{{ appointment.appointment_date|date:"F d, Y" }}</strong>
+                                    <span class="text-muted">({{ appointment.appointment_date|date:"l" }})</span>
+                                </div>
+                                <div>
+                                    <span class="badge bg-{% if appointment.status == 'completed' %}success{% elif appointment.status == 'scheduled' %}primary{% else %}danger{% endif %} me-2">
+                                        {{ appointment.status|title }}
+                                    </span>
+                                    <span class="badge bg-secondary">Token #{{ appointment.token_number }}</span>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-8">
+                                        <h6 class="text-primary">
+                                            <i class="fas fa-clock"></i>
+                                            {{ appointment.estimated_time|time:"g:i A" }}
+                                        </h6>
+
+                                        {% if appointment.reason %}
+                                        <div class="mb-3">
+                                            <strong>Reason for Visit:</strong>
+                                            <p class="mb-0 text-muted">{{ appointment.reason }}</p>
+                                        </div>
+                                        {% endif %}
+
+                                        {% if appointment.prescription.pk %}
+                                        <div class="prescription-section">
+                                            <strong class="text-success">
+                                                <i class="fas fa-prescription"></i> Prescription:
+                                            </strong>
+                                            <button type="button" class="btn btn-sm btn-outline-success ms-2 view-prescription-btn"
+                                                    data-bs-toggle="modal" data-bs-target="#prescriptionModal"
+                                                    data-appointment-id="{{ appointment.id }}"
+                                                    data-doctor-name="Dr. {{ doctor.user.get_full_name }}"
+                                                    data-appointment-date="{{ appointment.appointment_date|date:'M d, Y' }}">
+                                                <i class="fas fa-eye"></i> View Prescription
+                                            </button>
+                                        </div>
+                                        {% else %}
+                                        <div class="text-muted">
+                                            <i class="fas fa-prescription"></i> No prescription for this visit
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                    <div class="col-md-4 text-end">
+                                        <small class="text-muted d-block">
+                                            Consultation Duration: ~10 mins
+                                        </small>
+                                        {% if appointment.appointment_date == today %}
+                                        <span class="badge bg-warning">Today</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center py-5">
+                    <h5 class="text-muted">No consultation history found</h5>
+                    <p class="text-muted">You haven't had any appointments with this doctor yet.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Prescription View Modal -->
+<div class="modal fade" id="prescriptionModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Prescription Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p><strong>Doctor:</strong> <span id="prescriptionDoctorName"></span></p>
+                <p><strong>Appointment Date:</strong> <span id="prescriptionAppointmentDate"></span></p>
+                <div class="mb-3">
+                    <label class="form-label"><strong>Prescription:</strong></label>
+                    <div class="border p-3 bg-light rounded prescription-content"
+                         style="min-height: 200px; white-space: pre-wrap; font-family: monospace;">
+                        <!-- Prescription content will be inserted here -->
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" onclick="window.print()">
+                    <i class="fas fa-print"></i> Print
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const prescriptionModal = new bootstrap.Modal(document.getElementById('prescriptionModal'));
+
+    // View prescription buttons
+    document.querySelectorAll('.view-prescription-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            const appointmentId = this.dataset.appointmentId;
+            const doctorName = this.dataset.doctorName;
+            const appointmentDate = this.dataset.appointmentDate;
+
+            document.getElementById('prescriptionDoctorName').textContent = doctorName;
+            document.getElementById('prescriptionAppointmentDate').textContent = appointmentDate;
+
+            // Load prescription content
+            fetch(`/prescriptions/${appointmentId}/`)
+                .then(response => {
+                    if (!response.ok) throw new Error('Network response was not ok');
+                    return response.json();
+                })
+                .then(data => {
+                    const prescriptionContent = document.querySelector('.prescription-content');
+                    if (data.prescription_text && data.prescription_text.trim() !== '') {
+                        prescriptionContent.textContent = data.prescription_text;
+                    } else {
+                        prescriptionContent.textContent = 'No prescription details available.';
+                    }
+                    prescriptionModal.show();
+                })
+                .catch(error => {
+                    console.error('Error loading prescription:', error);
+                    document.querySelector('.prescription-content').textContent = 'Error loading prescription.';
+                    prescriptionModal.show();
+                });
+        });
+    });
+});
+</script>
+
+<style>
+.timeline-item {
+    position: relative;
+}
+
+.timeline-item::before {
+    content: '';
+    position: absolute;
+    left: -20px;
+    top: 20px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background-color: #0d6efd;
+    border: 3px solid white;
+    box-shadow: 0 0 0 3px #0d6efd;
+}
+
+.timeline {
+    position: relative;
+}
+
+.timeline::before {
+    content: '';
+    position: absolute;
+    left: -14px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background-color: #e9ecef;
+}
+
+.card {
+    transition: transform 0.2s ease-in-out;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.prescription-content {
+    font-size: 14px;
+    line-height: 1.5;
+}
+</style>
+{% endblock %}

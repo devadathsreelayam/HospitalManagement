@@ -325,7 +325,7 @@ def add_prescription(request):
     print("🟢 add_prescription view called")  # Debug
 
     if request.user.user_type != 'doctor':
-        print("🔴 Access denied - not a doctor")  # Debug
+        print("Access denied - not a doctor")  # Debug
         return JsonResponse({'success': False, 'error': 'Access denied'})
 
     if request.method == 'POST':
@@ -340,24 +340,24 @@ def add_prescription(request):
             print(f"📋 Prescription text length: {len(prescription_text)}")  # Debug
 
             if not appointment_id:
-                print("🔴 No appointment ID")  # Debug
+                print("No appointment ID")  # Debug
                 return JsonResponse({'success': False, 'error': 'Appointment ID required'})
 
             # Get appointment
             try:
                 appointment = Appointment.objects.get(id=appointment_id, doctor=request.user.doctor)
-                print(f"✅ Found appointment: {appointment}")  # Debug
+                print(f"Found appointment: {appointment}")  # Debug
             except Appointment.DoesNotExist:
-                print("🔴 Appointment not found")  # Debug
+                print("Appointment not found")  # Debug
                 return JsonResponse({'success': False, 'error': 'Appointment not found'})
 
             # Check if prescription is allowed
             if not appointment.can_prescribe():
-                print("🔴 Cannot prescribe for future appointment")  # Debug
+                print("Cannot prescribe for future appointment")  # Debug
                 return JsonResponse({'success': False, 'error': 'Cannot prescribe for future appointments'})
 
             if not prescription_text:
-                print("🔴 Empty prescription text")  # Debug
+                print("Empty prescription text")  # Debug
                 return JsonResponse({'success': False, 'error': 'Prescription text is required'})
 
             # Create or update prescription
@@ -375,7 +375,7 @@ def add_prescription(request):
                 )
                 created = True
 
-            print("✅ Prescription saved successfully")  # Debug
+            print("Prescription saved successfully")  # Debug
             return JsonResponse({
                 'success': True,
                 'message': 'Prescription saved successfully',
@@ -383,33 +383,43 @@ def add_prescription(request):
             })
 
         except Exception as e:
-            print(f"🔴 Exception in view: {str(e)}")  # Debug
+            print(f"Exception in view: {str(e)}")  # Debug
             import traceback
             traceback.print_exc()  # This will print full traceback to console
             return JsonResponse({'success': False, 'error': f'Server error: {str(e)}'})
 
     else:
         # GET request - should not happen for this endpoint
-        print("🔴 GET request to POST-only endpoint")  # Debug
+        print("GET request to POST-only endpoint")  # Debug
         return JsonResponse({'success': False, 'error': 'Method not allowed'})
 
 
 @login_required
 def get_prescription(request, appointment_id):
-    """Get prescription for an appointment"""
-    print(f"🟢 get_prescription called for appointment {appointment_id}")
-
-    if request.user.user_type != 'doctor':
-        print("🔴 Access denied - not a doctor")
-        return JsonResponse({'error': 'Access denied'}, status=403)
+    """Get prescription for an appointment - Allow both doctor and patient"""
+    print(f"🟢 get_prescription called for appointment {appointment_id} by {request.user.user_type}")
 
     try:
-        appointment = Appointment.objects.get(id=appointment_id, doctor=request.user.doctor)
-        print(f"✅ Found appointment: {appointment}")
+        # Doctors can view prescriptions for their appointments
+        if request.user.user_type == 'doctor':
+            appointment = Appointment.objects.get(id=appointment_id, doctor=request.user.doctor)
+            print(f"Doctor accessing prescription for their appointment")
 
+        # Patients can view their own prescriptions
+        elif request.user.user_type == 'patient':
+            appointment = Appointment.objects.get(id=appointment_id, patient=request.user)
+            print(f"Patient accessing their own prescription")
+
+        else:
+            print("Access denied - invalid user type")
+            return JsonResponse({'error': 'Access denied'}, status=403)
+
+        print(f"Found appointment: {appointment}")
+
+        # SAFELY check if prescription exists
         try:
             prescription = Prescription.objects.get(appointment=appointment)
-            print(f"✅ Found prescription: {prescription.prescription_text[:50]}...")  # First 50 chars
+            print(f"Found prescription: {prescription.prescription_text[:50]}...")
             return JsonResponse({'prescription_text': prescription.prescription_text})
 
         except Prescription.DoesNotExist:
@@ -417,11 +427,13 @@ def get_prescription(request, appointment_id):
             return JsonResponse({'prescription_text': ''})
 
     except Appointment.DoesNotExist:
-        print(f"🔴 Appointment {appointment_id} not found or not owned by doctor")
-        return JsonResponse({'error': 'Appointment not found'}, status=404)
+        print(f"Appointment {appointment_id} not found or access denied for user {request.user}")
+        return JsonResponse({'error': 'Appointment not found or access denied'}, status=404)
 
     except Exception as e:
-        print(f"🔴 Unexpected error: {str(e)}")
+        print(f"Unexpected error: {str(e)}")
+        import traceback
+        traceback.print_exc()
         return JsonResponse({'error': 'Server error'}, status=500)
 
 
@@ -569,3 +581,102 @@ def patient_history(request, patient_id):
     except Patient.DoesNotExist:
         messages.error(request, 'Patient profile not found.')
         return redirect('doctor_dashboard')
+
+
+@login_required
+def patient_treatment_history(request):
+    """Show summary of all doctors patient has consulted"""
+    if request.user.user_type != 'patient':
+        messages.error(request, 'Access denied.')
+        return redirect('patient_dashboard')
+
+    # Get all distinct doctors the patient has appointments with
+    from django.db.models import Count, Max, Min, Exists, OuterRef
+
+    # Subquery to check if any appointment with this doctor has a prescription
+    prescription_exists = Prescription.objects.filter(
+        appointment__doctor=OuterRef('pk'),
+        appointment__patient=request.user
+    )
+
+    # Get doctors with statistics
+    doctors = Doctor.objects.filter(
+        appointment__patient=request.user
+    ).distinct().annotate(
+        total_consultations=Count('appointment'),
+        last_visit=Max('appointment__appointment_date'),
+        first_visit=Min('appointment__appointment_date'),
+        has_prescriptions=Exists(prescription_exists)
+    ).select_related('user')
+
+    # Calculate overall statistics
+    appointments = Appointment.objects.filter(patient=request.user)
+    total_consultations = appointments.count()
+    total_doctors = doctors.count()
+
+    if appointments.exists():
+        first_visit_overall = appointments.earliest('appointment_date').appointment_date
+        last_visit_overall = appointments.latest('appointment_date').appointment_date
+    else:
+        first_visit_overall = None
+        last_visit_overall = None
+
+    context = {
+        'doctors_history': doctors,  # Now using the annotated queryset directly
+        'total_consultations': total_consultations,
+        'total_doctors': total_doctors,
+        'first_visit_overall': first_visit_overall,
+        'last_visit_overall': last_visit_overall,
+    }
+
+    return render(request, 'patient_treatment_history.html', context)
+
+
+@login_required
+def patient_doctor_history(request, doctor_id):
+    """Show detailed history with specific doctor"""
+    if request.user.user_type != 'patient':
+        messages.error(request, 'Access denied.')
+        return redirect('patient_dashboard')
+
+    # Get doctor and verify patient has history with them
+    doctor = get_object_or_404(Doctor, id=doctor_id)
+
+    # Get all appointments with this doctor
+    appointments = Appointment.objects.filter(
+        patient=request.user,
+        doctor=doctor
+    ).prefetch_related('prescription').order_by('-appointment_date', '-created_at')
+
+    if not appointments.exists():
+        messages.error(request, 'No treatment history found with this doctor.')
+        return redirect('patient_treatment_history')
+
+    # Check if any appointment has prescriptions (safely)
+    has_prescriptions = False
+    for appointment in appointments:
+        try:
+            if hasattr(appointment, 'prescription') and appointment.prescription:
+                has_prescriptions = True
+                break
+        except Prescription.DoesNotExist:
+            continue
+
+    # Calculate statistics for this doctor
+    total_visits = appointments.count()
+    completed_visits = appointments.filter(status='completed').count()
+    first_visit = appointments.earliest('appointment_date').appointment_date
+    last_visit = appointments.latest('appointment_date').appointment_date
+
+    context = {
+        'doctor': doctor,
+        'appointments': appointments,
+        'total_visits': total_visits,
+        'completed_visits': completed_visits,
+        'first_visit': first_visit,
+        'last_visit': last_visit,
+        'has_prescriptions': has_prescriptions,
+        'today': timezone.now().date(),  # Add this for template
+    }
+
+    return render(request, 'patient_doctor_history.html', context)
