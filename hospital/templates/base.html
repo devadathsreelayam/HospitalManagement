@@ -43,11 +43,23 @@
     </nav>
 
     {% if messages %}
-    <div class="container mt-3">
+    <!-- Toast Container -->
+    <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1100;">
         {% for message in messages %}
-        <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show" role="alert">
-            {{ message }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        <div class="toast align-items-center text-white bg-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} border-0"
+             role="alert" aria-live="assertive" aria-atomic="true" data-bs-autohide="true" data-bs-delay="3000">
+            <div class="d-flex">
+                <div class="toast-body">
+                    <i class="fas
+                        {% if message.tags == 'success' %}fa-check-circle{% endif %}
+                        {% if message.tags == 'error' or message.tags == 'danger' %}fa-exclamation-circle{% endif %}
+                        {% if message.tags == 'warning' %}fa-exclamation-triangle{% endif %}
+                        {% if message.tags == 'info' %}fa-info-circle{% endif %}
+                        me-2"></i>
+                    {{ message }}
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
         </div>
         {% endfor %}
     </div>
@@ -61,6 +73,21 @@
     {% endblock %}
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Auto-show and auto-dismiss toasts
+        document.addEventListener('DOMContentLoaded', function() {
+            var toastElList = [].slice.call(document.querySelectorAll('.toast'));
+            var toastList = toastElList.map(function(toastEl) {
+                var toast = new bootstrap.Toast(toastEl);
+                toast.show();
+
+                // Auto remove from DOM after hide
+                toastEl.addEventListener('hidden.bs.toast', function() {
+                    toastEl.remove();
+                });
+            });
+        });
+    </script>
 
     {% block extra_js %}
     {% endblock %}
