@@ -1,0 +1,108 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-10 col-lg-8">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h2 class="text-primary">Edit Doctor</h2>
+                <p class="text-muted">Update doctor information for Dr. {{ doctor.user.get_full_name }}</p>
+            </div>
+            <a href="{% url 'admin_doctors_list' %}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-2"></i>Back to List
+            </a>
+        </div>
+
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-primary text-white py-3">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-edit me-2"></i>Edit Doctor Information
+                </h5>
+            </div>
+            <div class="card-body p-4">
+                <form method="post" action="{% url 'admin_doctor_edit' doctor.id %}" novalidate>
+                    {% csrf_token %}
+
+                    <h6 class="text-primary mb-3"><i class="fas fa-user me-2"></i>Account Information</h6>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">Username</label>
+                            {{ user_form.username }}
+                            {% if user_form.username.errors %}
+                            <div class="text-danger small">{{ user_form.username.errors }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">Email</label>
+                            {{ user_form.email }}
+                            {% if user_form.email.errors %}
+                            <div class="text-danger small">{{ user_form.email.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">First Name</label>
+                            {{ user_form.first_name }}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">Last Name</label>
+                            {{ user_form.last_name }}
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Phone Number</label>
+                        {{ user_form.phone }}
+                        <div class="form-text">10-digit phone number</div>
+                    </div>
+
+                    <hr class="my-4">
+
+                    <h6 class="text-primary mb-3"><i class="fas fa-briefcase-medical me-2"></i>Professional Information</h6>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">Qualification</label>
+                            {{ doctor_form.qualification }}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">Specialization</label>
+                            {{ doctor_form.specialization }}
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">Start Time</label>
+                            {{ doctor_form.start_time }}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">End Time</label>
+                            {{ doctor_form.end_time }}
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">Available Days</label>
+                            {{ doctor_form.available_days }}
+                            <div class="form-text">Comma-separated days (e.g., Monday,Tuesday,Wednesday)</div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">Max Daily Appointments</label>
+                            {{ doctor_form.max_appointments }}
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between mt-4">
+                        <a href="{% url 'admin_doctor_detail' doctor.id %}" class="btn btn-outline-secondary">Cancel</a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-2"></i>Update Doctor
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
