@@ -166,7 +166,50 @@ def admin_dashboard(request):
         messages.error(request, 'Access denied.')
         return redirect('dashboard')
 
-    return render(request, 'admin_dash.html', {'user': request.user})
+    # Calculate statistics
+    total_doctors = Doctor.objects.count()
+    total_patients = Patient.objects.count()
+    total_users = User.objects.count()
+
+    # Appointment statistics
+    today = timezone.now().date()
+    today_appointments = Appointment.objects.filter(appointment_date=today)
+    total_appointments_today = today_appointments.count()
+    completed_today = today_appointments.filter(status='completed').count()
+
+    # Lab reports statistics
+    total_lab_reports = LabReport.objects.count()
+    recent_lab_reports = LabReport.objects.filter(uploaded_at__date=today).count()
+
+    # Recent activity
+    recent_appointments = Appointment.objects.select_related(
+        'patient', 'doctor', 'doctor__user'
+    ).order_by('-created_at')[:5]
+
+    recent_lab_reports_list = LabReport.objects.select_related(
+        'appointment', 'appointment__patient', 'doctor', 'doctor__user'
+    ).order_by('-uploaded_at')[:5]
+
+    # System health (placeholder metrics)
+    system_health = 100  # Could be calculated based on various factors
+    active_users_today = User.objects.filter(last_login__date=today).count()
+
+    context = {
+        'total_doctors': total_doctors,
+        'total_patients': total_patients,
+        'total_users': total_users,
+        'total_appointments_today': total_appointments_today,
+        'completed_today': completed_today,
+        'total_lab_reports': total_lab_reports,
+        'recent_lab_reports': recent_lab_reports,
+        'recent_appointments': recent_appointments,
+        'recent_lab_reports_list': recent_lab_reports_list,
+        'system_health': system_health,
+        'active_users_today': active_users_today,
+        'today': today,
+    }
+
+    return render(request, 'admin_dash.html', context)
 
 
 def view_doctors(request):

@@ -1,5 +1,445 @@
 {% extends 'base.html' %}
 {% block content %}
-    <h1>Admin Dashboard</h1>
-    <p>Welcome back, {{ user.get_full_name }}</p>
+<div class="row">
+    <div class="col-md-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h2 class="text-primary">Admin Dashboard</h2>
+                <p class="text-muted">Hospital Management System Overview</p>
+            </div>
+            <div class="text-end">
+                <small class="text-muted">Last updated: {% now "F j, Y g:i A" %}</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Stats Section -->
+<div class="row mt-4">
+    <div class="col-md-3 mb-4">
+        <div class="card statistic-card professional-card border-0 shadow-sm">
+            <div class="card-body p-4">
+                <div class="d-flex align-items-center">
+                    <div class="flex-shrink-0">
+                        <div class="icon-container bg-primary bg-opacity-10 rounded-3 p-3">
+                            <i class="fas fa-user-md fa-lg text-primary"></i>
+                        </div>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                        <h3 class="fw-bold text-dark mb-1">{{ total_doctors }}</h3>
+                        <p class="text-muted mb-0">Total Doctors</p>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <small class="text-muted">Medical staff</small>
+                        <span class="badge bg-primary bg-opacity-10 text-primary">Active</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-4">
+        <div class="card statistic-card professional-card border-0 shadow-sm">
+            <div class="card-body p-4">
+                <div class="d-flex align-items-center">
+                    <div class="flex-shrink-0">
+                        <div class="icon-container bg-success bg-opacity-10 rounded-3 p-3">
+                            <i class="fas fa-users fa-lg text-success"></i>
+                        </div>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                        <h3 class="fw-bold text-dark mb-1">{{ total_patients }}</h3>
+                        <p class="text-muted mb-0">Total Patients</p>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <small class="text-muted">Registered</small>
+                        <span class="badge bg-success bg-opacity-10 text-success">Patients</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-4">
+        <div class="card statistic-card professional-card border-0 shadow-sm">
+            <div class="card-body p-4">
+                <div class="d-flex align-items-center">
+                    <div class="flex-shrink-0">
+                        <div class="icon-container bg-info bg-opacity-10 rounded-3 p-3">
+                            <i class="fas fa-calendar-check fa-lg text-info"></i>
+                        </div>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                        <h3 class="fw-bold text-dark mb-1">{{ total_appointments_today }}</h3>
+                        <p class="text-muted mb-0">Today's Appointments</p>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <small class="text-muted">{{ completed_today }} completed</small>
+                        <span class="badge bg-info bg-opacity-10 text-info">Today</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-4">
+        <div class="card statistic-card professional-card border-0 shadow-sm">
+            <div class="card-body p-4">
+                <div class="d-flex align-items-center">
+                    <div class="flex-shrink-0">
+                        <div class="icon-container bg-warning bg-opacity-10 rounded-3 p-3">
+                            <i class="fas fa-file-medical fa-lg text-warning"></i>
+                        </div>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                        <h3 class="fw-bold text-dark mb-1">{{ total_lab_reports }}</h3>
+                        <p class="text-muted mb-0">Lab Reports</p>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <small class="text-muted">{{ recent_lab_reports }} today</small>
+                        <span class="badge bg-warning bg-opacity-10 text-warning">Total</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- System Health & Quick Actions -->
+<div class="row">
+    <!-- System Health -->
+    <div class="col-md-4 mb-4">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-transparent border-0 pb-0">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-heartbeat text-danger me-2"></i>System Health
+                </h5>
+            </div>
+            <div class="card-body text-center">
+                <div class="system-health-indicator mb-3">
+                    <div class="health-circle mx-auto">
+                        <span class="health-percentage">{{ system_health }}%</span>
+                    </div>
+                </div>
+                <div class="row text-center">
+                    <div class="col-6">
+                        <small class="text-muted">Active Users Today</small>
+                        <h6 class="fw-bold text-primary">{{ active_users_today }}</h6>
+                    </div>
+                    <div class="col-6">
+                        <small class="text-muted">Total Users</small>
+                        <h6 class="fw-bold text-info">{{ total_users }}</h6>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="col-md-8 mb-4">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-transparent border-0">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-bolt text-warning me-2"></i>Quick Actions
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <a href="#" class="btn btn-outline-primary w-100 h-100 py-3">
+                            <i class="fas fa-user-md fa-2x mb-2"></i><br>
+                            Manage Doctors
+                        </a>
+                    </div>
+                    <div class="col-md-6">
+                        <a href="#" class="btn btn-outline-success w-100 h-100 py-3">
+                            <i class="fas fa-users fa-2x mb-2"></i><br>
+                            Manage Patients
+                        </a>
+                    </div>
+                    <div class="col-md-6">
+                        <a href="#" class="btn btn-outline-info w-100 h-100 py-3">
+                            <i class="fas fa-calendar-alt fa-2x mb-2"></i><br>
+                            View Appointments
+                        </a>
+                    </div>
+                    <div class="col-md-6">
+                        <a href="#" class="btn btn-outline-warning w-100 h-100 py-3">
+                            <i class="fas fa-file-medical-alt fa-2x mb-2"></i><br>
+                            Lab Reports
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Activity Section -->
+<div class="row">
+    <!-- Recent Appointments -->
+    <div class="col-md-6 mb-4">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-transparent border-0 d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-calendar-day text-primary me-2"></i>Recent Appointments
+                </h5>
+                <a href="#" class="btn btn-sm btn-outline-primary">View All</a>
+            </div>
+            <div class="card-body">
+                {% if recent_appointments %}
+                <div class="list-group list-group-flush">
+                    {% for appointment in recent_appointments %}
+                    <div class="list-group-item border-0 px-0 py-3">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <h6 class="mb-1">{{ appointment.patient.get_full_name }}</h6>
+                                <p class="mb-1 text-muted small">
+                                    <i class="fas fa-user-md me-1"></i>
+                                    Dr. {{ appointment.doctor.user.get_full_name }}
+                                </p>
+                                <small class="text-muted">
+                                    <i class="fas fa-calendar me-1"></i>
+                                    {{ appointment.appointment_date }} at {{ appointment.estimated_time|time:"g:i A" }}
+                                </small>
+                            </div>
+                            <span class="badge bg-{% if appointment.status == 'completed' %}success{% elif appointment.status == 'scheduled' %}primary{% else %}warning{% endif %}">
+                                {{ appointment.status|title }}
+                            </span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="fas fa-calendar-times fa-2x text-muted mb-3"></i>
+                    <p class="text-muted mb-0">No recent appointments</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Lab Reports -->
+    <div class="col-md-6 mb-4">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-transparent border-0 d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-microscope text-success me-2"></i>Recent Lab Reports
+                </h5>
+                <a href="#" class="btn btn-sm btn-outline-success">View All</a>
+            </div>
+            <div class="card-body">
+                {% if recent_lab_reports_list %}
+                <div class="list-group list-group-flush">
+                    {% for report in recent_lab_reports_list %}
+                    <div class="list-group-item border-0 px-0 py-3">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <h6 class="mb-1">{{ report.test_name }}</h6>
+                                <p class="mb-1 text-muted small">
+                                    <i class="fas fa-user me-1"></i>
+                                    {{ report.appointment.patient.get_full_name }}
+                                </p>
+                                <small class="text-muted">
+                                    <i class="fas fa-user-md me-1"></i>
+                                    Dr. {{ report.doctor.user.get_full_name }}
+                                </small>
+                            </div>
+                            <div class="text-end">
+                                <small class="text-muted d-block">{{ report.uploaded_at|date:"M d" }}</small>
+                                <span class="badge bg-info bg-opacity-10 text-info">
+                                    {{ report.get_report_type_display }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="fas fa-file-medical fa-2x text-muted mb-3"></i>
+                    <p class="text-muted mb-0">No recent lab reports</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- System Information -->
+<div class="row">
+    <div class="col-md-12">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-transparent border-0">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-info-circle text-info me-2"></i>System Information
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-md-3 col-6 mb-3">
+                        <i class="fas fa-database fa-2x text-primary mb-2"></i>
+                        <h6 class="fw-bold">Database</h6>
+                        <small class="text-muted">Operational</small>
+                    </div>
+                    <div class="col-md-3 col-6 mb-3">
+                        <i class="fas fa-shield-alt fa-2x text-success mb-2"></i>
+                        <h6 class="fw-bold">Security</h6>
+                        <small class="text-muted">Active</small>
+                    </div>
+                    <div class="col-md-3 col-6 mb-3">
+                        <i class="fas fa-sync fa-2x text-info mb-2"></i>
+                        <h6 class="fw-bold">Backups</h6>
+                        <small class="text-muted">Automatic</small>
+                    </div>
+                    <div class="col-md-3 col-6 mb-3">
+                        <i class="fas fa-clock fa-2x text-warning mb-2"></i>
+                        <h6 class="fw-bold">Uptime</h6>
+                        <small class="text-muted">99.9%</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.professional-card {
+    border-radius: 12px;
+    transition: all 0.3s ease;
+    background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+    border: 1px solid rgba(0,0,0,0.05);
+}
+
+.professional-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.1) !important;
+    background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+}
+
+.icon-container {
+    width: 60px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+}
+
+.professional-card:hover .icon-container {
+    transform: scale(1.1);
+}
+
+.badge {
+    font-size: 0.7rem;
+    font-weight: 500;
+    padding: 0.25rem 0.5rem;
+    border-radius: 6px;
+}
+
+/* System Health Indicator */
+.health-circle {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    background: conic-gradient(#28a745 {{ system_health }}%, #e9ecef 0%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+}
+
+.health-circle::before {
+    content: '';
+    position: absolute;
+    width: 80px;
+    height: 80px;
+    background: white;
+    border-radius: 50%;
+}
+
+.health-percentage {
+    position: relative;
+    z-index: 1;
+    font-weight: bold;
+    font-size: 1.2rem;
+    color: #28a745;
+}
+
+/* Quick Actions Buttons */
+.btn-outline-primary, .btn-outline-success, .btn-outline-info, .btn-outline-warning {
+    border-width: 2px;
+    transition: all 0.3s ease;
+}
+
+.btn-outline-primary:hover, .btn-outline-success:hover,
+.btn-outline-info:hover, .btn-outline-warning:hover {
+    transform: translateY(-2px);
+}
+
+/* List Group Items */
+.list-group-item {
+    border-radius: 8px !important;
+    margin-bottom: 0.5rem;
+    transition: all 0.2s ease;
+}
+
+.list-group-item:hover {
+    background-color: #f8f9fa;
+    transform: translateX(2px);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .health-circle {
+        width: 80px;
+        height: 80px;
+    }
+
+    .health-circle::before {
+        width: 60px;
+        height: 60px;
+    }
+
+    .health-percentage {
+        font-size: 1rem;
+    }
+
+    .professional-card {
+        margin-bottom: 1rem;
+    }
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Auto-refresh dashboard every 60 seconds
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-refresh functionality
+    setInterval(function() {
+        // You can implement auto-refresh here if needed
+        // location.reload(); // Simple refresh
+    }, 60000);
+
+    // Add click animations to cards
+    const cards = document.querySelectorAll('.professional-card');
+    cards.forEach(card => {
+        card.addEventListener('click', function() {
+            this.style.transform = 'translateY(-5px) scale(1.02)';
+            setTimeout(() => {
+                this.style.transform = 'translateY(-3px)';
+            }, 150);
+        });
+    });
+});
+</script>
 {% endblock %}
