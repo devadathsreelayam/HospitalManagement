@@ -1,22 +1,35 @@
 from django.contrib import admin
-
+from django.contrib.auth.admin import UserAdmin
 from hospital.models import Doctor, Patient, User, Appointment, Prescription, LabReport
 
 
-# Register your models here.
+@admin.register(User)
+class CustomUserAdmin(UserAdmin):
+    fieldsets = UserAdmin.fieldsets + (
+        ('Hospital Information', {'fields': ('phone', 'user_type')}),
+    )
+
+    add_fieldsets = UserAdmin.add_fieldsets + (
+        ('Hospital Information', {'fields': ('phone', 'user_type')}),
+    )
+
+    list_display = ('username', 'email', 'phone', 'user_type', 'is_staff', 'is_active')
+    list_filter = ('user_type', 'is_staff', 'is_superuser', 'is_active')
+    search_fields = ('username', 'first_name', 'last_name', 'email', 'phone')
+
+
 @admin.register(Doctor)
 class DoctorAdmin(admin.ModelAdmin):
-    pass
+    list_display = ('user', 'specialization')
+    list_filter = ('specialization',)
+    search_fields = ('user__first_name', 'user__last_name', 'specialization')
 
 
 @admin.register(Patient)
 class PatientAdmin(admin.ModelAdmin):
-    pass
-
-
-@admin.register(User)
-class UserAdmin(admin.ModelAdmin):
-    pass
+    list_display = ('user', 'date_of_birth', 'gender')
+    list_filter = ('gender', )
+    search_fields = ('user__first_name', 'user__last_name')
 
 
 @admin.register(Appointment)
@@ -27,7 +40,7 @@ class AppointmentAdmin(admin.ModelAdmin):
     search_fields = ('patient__user__first_name', 'patient__user__last_name', 'doctor__user__first_name')
 
     def get_patient_name(self, obj):
-        return obj.patient.get_full_name()
+        return obj.patient.user.get_full_name()
 
     get_patient_name.short_description = 'Patient'
 
