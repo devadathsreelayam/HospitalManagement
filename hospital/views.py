@@ -957,7 +957,7 @@ def admin_doctor_create(request):
             # Create user first
             user = user_form.save(commit=False)
             user.user_type = 'doctor'
-            user.set_password('defaultpassword123')  # Set default password
+            user.set_password('doctor123')  # Set default password
             user.save()
 
             # Create doctor profile
