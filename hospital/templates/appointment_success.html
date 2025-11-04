@@ -15,6 +15,17 @@
                 <p><strong>Specialization:</strong> {{ appointment.doctor.get_specialization_display }}</p>
             </div>
 
+            <!-- Download PDF Button -->
+            <div class="mt-4">
+                <a href="{% url 'download_appointment_token' appointment.id %}"
+                   class="btn btn-primary btn-lg">
+                    <i class="fas fa-download me-2"></i>Download Token PDF
+                </a>
+                <p class="text-muted small mt-2">
+                    Includes QR code for quick check-in at hospital
+                </p>
+            </div>
+
             <div class="alert alert-info mt-3">
                 <strong>Please Note:</strong>
                 <ul class="mb-0 text-start">
@@ -22,12 +33,36 @@
                     <li>Consultations are on first-come-first-served basis by token number</li>
                     <li>Each consultation takes approximately 10 minutes</li>
                     <li>There might be slight delays depending on previous consultations</li>
+                    <li>Bring your token PDF or show it on your mobile at reception</li>
                 </ul>
             </div>
-            
+
             <div class="mt-4">
                 <a href="{% url 'patient_dashboard' %}" class="btn btn-primary">Go to Dashboard</a>
                 <a href="{% url 'view_doctors' %}" class="btn btn-outline-secondary">Book Another Appointment</a>
+            </div>
+
+            <!-- QR Code Preview Section -->
+            <div class="mt-5">
+                <div class="card border-0 bg-light">
+                    <div class="card-body">
+                        <h6 class="text-muted mb-3">
+                            <i class="fas fa-qrcode me-2"></i>QR Code Included in PDF
+                        </h6>
+                        <div class="bg-white p-3 d-inline-block rounded border">
+                            <div style="width: 120px; height: 120px; background: #f8f9fa; display: flex; align-items: center; justify-content: center; border: 2px dashed #dee2e6;">
+                                <div class="text-center">
+                                    <i class="fas fa-qrcode fa-2x text-muted mb-2"></i>
+                                    <br>
+                                    <small class="text-muted">Scan at reception</small>
+                                </div>
+                            </div>
+                        </div>
+                        <p class="text-muted small mt-2">
+                            The PDF contains a QR code with your appointment details for quick check-in
+                        </p>
+                    </div>
+                </div>
             </div>
         </div>
     </div>

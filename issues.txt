@@ -1,0 +1,1 @@
+- Doctors can still view reason and add prescription for cancelled appointments.
