@@ -8,6 +8,13 @@ from django.contrib.auth import login, authenticate, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 
+from reportlab.pdfgen import canvas
+from reportlab.lib.pagesizes import A4
+from reportlab.lib.units import mm
+from reportlab.lib.utils import ImageReader
+import qrcode
+from io import BytesIO
+
 from hospital.models import Doctor, Appointment, Prescription, User, Patient, LabReport
 from .forms import PatientRegistrationForm, LabReportForm, PatientProfileUpdateForm, DoctorUserForm, DoctorProfileForm
 
@@ -342,6 +349,118 @@ def appointment_success(request, appointment_id):
         'appointment': appointment
     }
     return render(request, 'appointment_success.html', context)
+
+
+@login_required
+def download_appointment_token(request, appointment_id):
+    """Generate and download appointment token as PDF"""
+    appointment = get_object_or_404(Appointment, id=appointment_id, patient=request.user)
+
+    # Create PDF response
+    response = HttpResponse(content_type='application/pdf')
+    filename = f"appointment_token_{appointment.id}.pdf"
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+
+    # Create PDF
+    p = canvas.Canvas(response, pagesize=A4)
+    width, height = A4
+
+    # Hospital Header
+    p.setFont("Helvetica-Bold", 20)
+    p.drawString(50, height - 50, "Hospital Management System")
+    p.setFont("Helvetica", 12)
+    p.drawString(50, height - 70, "Quality Healthcare, Always Available")
+
+    # Separator line
+    p.line(50, height - 80, width - 50, height - 80)
+
+    # Title
+    p.setFont("Helvetica-Bold", 16)
+    p.drawString(50, height - 110, "APPOINTMENT TOKEN")
+
+    # Token Number (Big and prominent)
+    p.setFont("Helvetica-Bold", 48)
+    p.drawString(50, height - 170, f"TOKEN #{appointment.token_number}")
+
+    # Appointment Details
+    y_position = height - 220
+    p.setFont("Helvetica-Bold", 12)
+
+    # Patient Details
+    p.drawString(50, y_position, "PATIENT DETAILS:")
+    p.setFont("Helvetica", 12)
+    p.drawString(50, y_position - 20, f"Name: {appointment.patient.get_full_name()}")
+    p.drawString(50, y_position - 35, f"Phone: {appointment.patient.phone}")
+    p.drawString(50, y_position - 50, f"Email: {appointment.patient.email}")
+
+    # Doctor Details
+    y_position -= 80
+    p.setFont("Helvetica-Bold", 12)
+    p.drawString(50, y_position, "DOCTOR DETAILS:")
+    p.setFont("Helvetica", 12)
+    p.drawString(50, y_position - 20, f"Name: Dr. {appointment.doctor.user.get_full_name()}")
+    p.drawString(50, y_position - 35, f"Specialization: {appointment.doctor.get_specialization_display()}")
+    p.drawString(50, y_position - 50, f"Qualification: {appointment.doctor.qualification}")
+
+    # Appointment Timing
+    y_position -= 80
+    p.setFont("Helvetica-Bold", 12)
+    p.drawString(50, y_position, "APPOINTMENT TIMING:")
+    p.setFont("Helvetica", 12)
+    p.drawString(50, y_position - 20, f"Date: {appointment.appointment_date.strftime('%B %d, %Y')}")
+    p.drawString(50, y_position - 35, f"Estimated Time: {appointment.estimated_time.strftime('%I:%M %p')}")
+
+    # Generate QR Code
+    qr_data = f"""
+Hospital Management System
+Appointment Token: #{appointment.token_number}
+Patient: {appointment.patient.get_full_name()}
+Doctor: Dr. {appointment.doctor.user.get_full_name()}
+Date: {appointment.appointment_date.strftime('%Y-%m-%d')}
+Time: {appointment.estimated_time.strftime('%H:%M')}
+    """.strip()
+
+    qr = qrcode.QRCode(version=1, box_size=4, border=2)
+    qr.add_data(qr_data)
+    qr.make(fit=True)
+
+    qr_img = qr.make_image(fill_color="black", back_color="white")
+    img_buffer = BytesIO()
+    qr_img.save(img_buffer, format='PNG')
+    img_buffer.seek(0)
+
+    # Add QR Code to PDF (right side)
+    qr_image = ImageReader(img_buffer)
+    p.drawImage(qr_image, width - 120, height - 300, width=80, height=80)
+    p.setFont("Helvetica-Oblique", 10)
+    p.drawString(width - 120, height - 385, "Scan for details")
+
+    # Instructions
+    y_position = 200
+    p.setFont("Helvetica-Bold", 12)
+    p.drawString(50, y_position, "IMPORTANT INSTRUCTIONS:")
+    p.setFont("Helvetica", 10)
+
+    instructions = [
+        "1. Arrive 15 minutes before your estimated appointment time",
+        "2. Bring this token and any relevant medical reports",
+        "3. Inform reception if you need to reschedule or cancel",
+        "4. Emergency cases will be given priority",
+        "5. Maintain silence in the waiting area"
+    ]
+
+    for i, instruction in enumerate(instructions):
+        p.drawString(60, y_position - 20 - (i * 15), instruction)
+
+    # Footer
+    p.setFont("Helvetica-Oblique", 10)
+    p.drawString(50, 50, "Thank you for choosing our hospital. We care for your health!")
+    p.drawString(50, 35, "Generated on: " + datetime.now().strftime("%Y-%m-%d %I:%M %p"))
+
+    p.showPage()
+    p.save()
+
+    return response
 
 
 @login_required
