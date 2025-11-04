@@ -1,240 +1,35 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="container py-4">
-    <!-- Success Header -->
-    <div class="text-center mb-5">
-        <div class="success-icon mb-3">
-            <i class="fas fa-check-circle text-success" style="font-size: 4rem;"></i>
-        </div>
-        <h1 class="text-success fw-bold">Appointment Confirmed!</h1>
-        <p class="lead text-muted">Your appointment has been successfully booked</p>
-    </div>
+<div class="text-center py-5">
+    <div class="card border-success">
+        <div class="card-body">
+            <h1 class="text-success">✅ Appointment Booked Successfully!</h1>
+            <h3 class="mt-4">Your Token Number: <span class="badge bg-primary fs-2">#{{ appointment.token_number }}</span></h3>
+            
+            <div class="mt-4">
+                <p><strong>Doctor:</strong> Dr. {{ appointment.doctor.user.get_full_name }}</p>
+                <p><strong>Date:</strong> {{ appointment.appointment_date }}</p>
+                <p><strong>Token Number:</strong> #{{ appointment.token_number }}</p>
+                <p><strong>Estimated Time:</strong> {{ appointment.estimated_time|time:"g:i A" }}</p>
+                <p><strong>Specialization:</strong> {{ appointment.doctor.get_specialization_display }}</p>
+            </div>
 
-    <div class="row justify-content-center">
-        <div class="col-lg-10">
-            <!-- Main Card -->
-            <div class="card border-0 shadow-lg">
-                <div class="card-body p-4">
-                    <!-- Token Display -->
-                    <div class="text-center mb-4">
-                        <h3 class="text-muted mb-2">Your Token Number</h3>
-                        <div class="token-number display-1 fw-bold text-primary">
-                            #{{ appointment.token_number }}
-                        </div>
-                    </div>
-
-                    <div class="row">
-                        <!-- Patient & Doctor Info -->
-                        <div class="col-md-6">
-                            <div class="info-section">
-                                <h5 class="section-title text-primary mb-3">
-                                    <i class="fas fa-user me-2"></i>Appointment Details
-                                </h5>
-
-                                <!-- Patient Card -->
-                                <div class="card border-0 bg-light mb-3">
-                                    <div class="card-body">
-                                        <div class="d-flex align-items-center mb-3">
-                                            {% if appointment.patient.profile_image %}
-                                                <img src="{{ appointment.patient.profile_image.url }}"
-                                                     alt="Patient"
-                                                     class="rounded-circle me-3"
-                                                     style="width: 60px; height: 60px; object-fit: cover;">
-                                            {% else %}
-                                                <div class="avatar-placeholder rounded-circle me-3 d-flex align-items-center justify-content-center bg-primary text-white"
-                                                     style="width: 60px; height: 60px;">
-                                                    <i class="fas fa-user fa-lg"></i>
-                                                </div>
-                                            {% endif %}
-                                            <div>
-                                                <h6 class="mb-1">Patient</h6>
-                                                <strong>{{ appointment.patient.get_full_name }}</strong>
-                                            </div>
-                                        </div>
-                                        <div class="patient-details">
-                                            <small class="text-muted d-block">
-                                                <i class="fas fa-phone me-2"></i>{{ appointment.patient.phone }}
-                                            </small>
-                                            <small class="text-muted">
-                                                <i class="fas fa-envelope me-2"></i>{{ appointment.patient.email }}
-                                            </small>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Doctor Card -->
-                                <div class="card border-0 bg-light">
-                                    <div class="card-body">
-                                        <div class="d-flex align-items-center mb-3">
-                                            {% if appointment.doctor.user.profile_image %}
-                                                <img src="{{ appointment.doctor.user.profile_image.url }}"
-                                                     alt="Dr. {{ appointment.doctor.user.get_full_name }}"
-                                                     class="rounded-circle me-3"
-                                                     style="width: 60px; height: 60px; object-fit: cover;">
-                                            {% else %}
-                                                <div class="avatar-placeholder rounded-circle me-3 d-flex align-items-center justify-content-center bg-success text-white"
-                                                     style="width: 60px; height: 60px;">
-                                                    <i class="fas fa-user-md fa-lg"></i>
-                                                </div>
-                                            {% endif %}
-                                            <div>
-                                                <h6 class="mb-1">Doctor</h6>
-                                                <strong>Dr. {{ appointment.doctor.user.get_full_name }}</strong>
-                                            </div>
-                                        </div>
-                                        <div class="doctor-details">
-                                            <small class="text-muted d-block">
-                                                <i class="fas fa-stethoscope me-2"></i>{{ appointment.doctor.get_specialization_display }}
-                                            </small>
-                                            <small class="text-muted">
-                                                <i class="fas fa-graduation-cap me-2"></i>{{ appointment.doctor.qualification }}
-                                            </small>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Timing & QR Code -->
-                        <div class="col-md-6">
-                            <!-- Timing Card -->
-                            <div class="card border-primary mb-4">
-                                <div class="card-header bg-primary text-white">
-                                    <h6 class="mb-0"><i class="fas fa-clock me-2"></i>Appointment Timing</h6>
-                                </div>
-                                <div class="card-body text-center">
-                                    <div class="timing-item mb-3">
-                                        <i class="fas fa-calendar-day text-primary fa-2x mb-2"></i>
-                                        <h5 class="text-dark">{{ appointment.appointment_date|date:"F d, Y" }}</h5>
-                                    </div>
-                                    <div class="timing-item">
-                                        <i class="fas fa-clock text-primary fa-2x mb-2"></i>
-                                        <h5 class="text-dark">{{ appointment.estimated_time|time:"g:i A" }}</h5>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- QR Code Card -->
-                            <div class="card border-warning">
-                                <div class="card-header bg-warning text-dark">
-                                    <h6 class="mb-0"><i class="fas fa-qrcode me-2"></i>Digital Token</h6>
-                                </div>
-                                <div class="card-body text-center">
-                                    {% if qr_code_base64 %}
-                                        <img src="{{ qr_code_base64 }}"
-                                             alt="Appointment QR Code"
-                                             class="img-fluid mb-3 rounded"
-                                             style="max-width: 200px;">
-                                    {% else %}
-                                        <div class="bg-light p-4 rounded mb-3">
-                                            <i class="fas fa-qrcode fa-3x text-muted mb-2"></i>
-                                            <p class="text-muted small mb-0">QR Code not available</p>
-                                        </div>
-                                    {% endif %}
-                                    <p class="text-muted small mb-0">
-                                        Scan this code at reception for quick check-in
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Instructions -->
-                    <div class="alert alert-info mt-4">
-                        <h6 class="alert-heading mb-3">
-                            <i class="fas fa-info-circle me-2"></i>Important Instructions
-                        </h6>
-                        <div class="row">
-                            <div class="col-md-6">
-                                <ul class="mb-0">
-                                    <li>Arrive 15 minutes before your appointment</li>
-                                    <li>Bring your medical reports if any</li>
-                                    <li>Carry a valid ID proof</li>
-                                </ul>
-                            </div>
-                            <div class="col-md-6">
-                                <ul class="mb-0">
-                                    <li>Consultations are by token number</li>
-                                    <li>Emergency cases get priority</li>
-                                    <li>Maintain silence in waiting area</li>
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Action Buttons -->
-                    <div class="text-center mt-4">
-                        <div class="btn-group" role="group">
-                            <a href="{% url 'download_appointment_token' appointment.id %}"
-                               class="btn btn-primary btn-lg">
-                                <i class="fas fa-download me-2"></i>Download PDF Token
-                            </a>
-                            <a href="{% url 'patient_dashboard' %}" class="btn btn-outline-primary btn-lg">
-                                <i class="fas fa-tachometer-alt me-2"></i>Dashboard
-                            </a>
-                            <a href="{% url 'view_doctors' %}" class="btn btn-outline-secondary btn-lg">
-                                <i class="fas fa-plus me-2"></i>New Appointment
-                            </a>
-                        </div>
-                    </div>
-                </div>
+            <div class="alert alert-info mt-3">
+                <strong>Please Note:</strong>
+                <ul class="mb-0 text-start">
+                    <li>Please arrive at the hospital 15 minutes before your estimated time</li>
+                    <li>Consultations are on first-come-first-served basis by token number</li>
+                    <li>Each consultation takes approximately 10 minutes</li>
+                    <li>There might be slight delays depending on previous consultations</li>
+                </ul>
+            </div>
+            
+            <div class="mt-4">
+                <a href="{% url 'patient_dashboard' %}" class="btn btn-primary">Go to Dashboard</a>
+                <a href="{% url 'view_doctors' %}" class="btn btn-outline-secondary">Book Another Appointment</a>
             </div>
         </div>
     </div>
 </div>
-{% endblock %}
-
-{% block extra_css %}
-<style>
-.token-number {
-    font-size: 4rem;
-    font-weight: 800;
-    text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
-}
-
-.section-title {
-    border-bottom: 2px solid #e9ecef;
-    padding-bottom: 0.5rem;
-}
-
-.avatar-placeholder {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-}
-
-.card {
-    border-radius: 15px;
-    transition: transform 0.2s ease-in-out;
-}
-
-.card:hover {
-    transform: translateY(-2px);
-}
-
-.timing-item {
-    padding: 1rem;
-    border-radius: 10px;
-    background: #f8f9fa;
-}
-
-.btn-group .btn {
-    border-radius: 10px;
-    margin: 0 5px;
-}
-
-@media (max-width: 768px) {
-    .token-number {
-        font-size: 3rem;
-    }
-
-    .btn-group {
-        flex-direction: column;
-    }
-
-    .btn-group .btn {
-        margin: 5px 0;
-        width: 100%;
-    }
-}
-</style>
 {% endblock %}
