@@ -6,18 +6,6 @@
         <h2>Book Appointment with Dr. {{ doctor.user.get_full_name }}</h2>
         <p class="text-muted">{{ doctor.get_specialization_display }}</p>
 
-{#        <!-- MESSAGES DISPLAY -->#}
-{#        {% if messages %}#}
-{#        <div class="messages mb-4">#}
-{#            {% for message in messages %}#}
-{#            <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show" role="alert">#}
-{#                {{ message }}#}
-{#                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>#}
-{#            </div>#}
-{#            {% endfor %}#}
-{#        </div>#}
-{#        {% endif %}#}
-
         <form method="post">
             {% csrf_token %}
 
