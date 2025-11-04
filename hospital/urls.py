@@ -47,6 +47,11 @@ urlpatterns = [
     # Admin Lab Reports
     path('admin/lab-reports/', views.admin_lab_reports_list, name='admin_lab_reports_list'),
     path('admin/lab-reports/statistics/', views.admin_lab_reports_statistics, name='admin_lab_reports_statistics'),
+
+
+    path('patient/profile/settings/', views.patient_profile_settings, name='patient_profile_settings'),
+    path('patient/profile/image/update/', views.patient_profile_image_update, name='patient_profile_image_update'),
+    path('patient/password/change/', views.patient_password_change, name='patient_password_change'),
 ]
 
 if settings.DEBUG:

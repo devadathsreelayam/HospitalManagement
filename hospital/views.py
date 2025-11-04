@@ -4,7 +4,7 @@ from django.utils import timezone
 from django.db.models import Q, Count
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth import login, authenticate, logout
+from django.contrib.auth import login, authenticate, logout, update_session_auth_hash
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 
@@ -16,7 +16,9 @@ import qrcode
 from io import BytesIO
 
 from hospital.models import Doctor, Appointment, Prescription, User, Patient, LabReport
-from .forms import PatientRegistrationForm, LabReportForm, PatientProfileUpdateForm, DoctorUserForm, DoctorProfileForm
+from .forms import PatientRegistrationForm, LabReportForm, PatientProfileUpdateForm, DoctorUserForm, DoctorProfileForm, \
+    PatientProfileImageForm, PatientPasswordChangeForm
+from .utils import generate_qr_code
 
 
 def index(request):
@@ -345,8 +347,22 @@ def appointment_success(request, appointment_id):
     """Show appointment confirmation page"""
     appointment = get_object_or_404(Appointment, id=appointment_id, patient=request.user)
 
+    # Generate QR code data for this page
+    qr_data = f"""
+    Hospital Management System
+    Appointment Token: #{appointment.token_number}
+    Patient: {appointment.patient.get_full_name()}
+    Doctor: Dr. {appointment.doctor.user.get_full_name()}
+    Date: {appointment.appointment_date.strftime('%Y-%m-%d')}
+    Time: {appointment.estimated_time.strftime('%H:%M')}
+    Specialization: {appointment.doctor.get_specialization_display()}
+        """.strip()
+
+    qr_code_base64 = generate_qr_code(qr_data)
+
     context = {
-        'appointment': appointment
+        'appointment': appointment,
+        'qr_code_base64': qr_code_base64,
     }
     return render(request, 'appointment_success.html', context)
 
@@ -990,6 +1006,78 @@ def patient_profile_update(request):
         'patient_profile': patient_profile,
     }
     return render(request, 'patient_profile_update.html', context)
+
+
+@login_required
+def patient_profile_settings(request):
+    """Profile settings page with image and password update"""
+    if request.user.user_type != 'patient':
+        messages.error(request, 'Access denied.')
+        return redirect('dashboard')
+
+    image_form = PatientProfileImageForm(instance=request.user)
+    password_form = PatientPasswordChangeForm(user=request.user)
+
+    context = {
+        'image_form': image_form,
+        'password_form': password_form,
+    }
+    return render(request, 'patient_profile_settings.html', context)
+
+
+@login_required
+def patient_profile_image_update(request):
+    """Update or remove patient profile image"""
+    if request.user.user_type != 'patient':
+        return JsonResponse({'success': False, 'error': 'Access denied'})
+
+    if request.method == 'POST':
+        # Check if this is a removal request
+        if 'remove_image' in request.POST:
+            # Remove the profile image
+            if request.user.profile_image:
+                request.user.profile_image.delete(save=False)
+            request.user.profile_image = None
+            request.user.save()
+            messages.success(request, 'Profile image removed successfully!')
+            return JsonResponse({'success': True})
+
+        # Handle image upload
+        form = PatientProfileImageForm(request.POST, request.FILES, instance=request.user)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Profile image updated successfully!')
+            return JsonResponse({'success': True})
+        else:
+            return JsonResponse({'success': False, 'error': form.errors['profile_image'][0]})
+
+    return JsonResponse({'success': False, 'error': 'Invalid request method'})
+
+
+@login_required
+def patient_password_change(request):
+    """Change patient password"""
+    if request.user.user_type != 'patient':
+        messages.error(request, 'Access denied.')
+        return redirect('dashboard')
+
+    if request.method == 'POST':
+        form = PatientPasswordChangeForm(user=request.user, data=request.POST)
+        if form.is_valid():
+            form.save()
+            update_session_auth_hash(request, form.user)
+            messages.success(request, 'Your password has been changed successfully!')
+            return redirect('patient_profile_settings')
+        else:
+            messages.error(request, 'Please correct the errors below.')
+    else:
+        form = PatientPasswordChangeForm(user=request.user)
+
+    context = {
+        'image_form': PatientProfileImageForm(instance=request.user),
+        'password_form': form,
+    }
+    return render(request, 'patient_profile_settings.html', context)
 
 
 @login_required

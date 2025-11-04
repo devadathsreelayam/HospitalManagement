@@ -1,0 +1,304 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-10 col-lg-8">
+        <!-- Header Section -->
+        <div class="text-center mb-5">
+            <div class="mb-4">
+                <i class="fas fa-user-cog fa-3x text-primary mb-3"></i>
+                <h2 class="text-primary">Profile Settings</h2>
+                <p class="text-muted">Manage your account preferences and security</p>
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- Profile Image Section -->
+            <div class="col-md-4 mb-4">
+                <div class="card shadow-sm border-0 h-100">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0"><i class="fas fa-camera me-2"></i>Profile Photo</h5>
+                    </div>
+                    <div class="card-body text-center">
+                        <!-- Current Profile Image -->
+                        <div class="profile-image-container mb-4">
+                            {% if user.profile_image %}
+                                <img src="{{ user.profile_image.url }}"
+                                     alt="{{ user.get_full_name }}"
+                                     class="rounded-circle img-fluid border border-4 border-primary shadow"
+                                     style="width: 150px; height: 150px; object-fit: cover;"
+                                     id="profile-image-preview">
+                            {% else %}
+                                <div class="default-avatar rounded-circle mx-auto d-flex align-items-center justify-content-center bg-primary text-white border border-4 border-primary shadow"
+                                     style="width: 150px; height: 150px;"
+                                     id="profile-image-preview">
+                                    <i class="fas fa-user fa-3x"></i>
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Image Upload Form -->
+                        <form id="profile-image-form" enctype="multipart/form-data">
+                            {% csrf_token %}
+                            <div class="mb-3">
+                                <input type="file"
+                                       name="profile_image"
+                                       id="profile_image"
+                                       class="form-control"
+                                       accept="image/*"
+                                       style="display: none;">
+                                <button type="button" class="btn btn-outline-primary w-100 mb-2" onclick="document.getElementById('profile_image').click()">
+                                    <i class="fas fa-upload me-2"></i>Choose Image
+                                </button>
+                                <div class="form-text small">
+                                    JPG, PNG, or GIF. Max 5MB.
+                                </div>
+                            </div>
+                        </form>
+
+                        <!-- Remove Image Button (only show if image exists) -->
+                        {% if user.profile_image %}
+                        <form method="post" action="{% url 'patient_profile_image_update' %}" id="remove-image-form">
+                            {% csrf_token %}
+                            <input type="hidden" name="profile_image" value="">
+                            <button type="button" class="btn btn-outline-danger btn-sm w-100" onclick="removeProfileImage()">
+                                <i class="fas fa-trash me-2"></i>Remove Photo
+                            </button>
+                        </form>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Password Change Section -->
+            <div class="col-md-8">
+                <div class="card shadow-sm border-0">
+                    <div class="card-header bg-warning text-dark">
+                        <h5 class="mb-0"><i class="fas fa-lock me-2"></i>Change Password</h5>
+                    </div>
+                    <div class="card-body">
+                        <form method="post" action="{% url 'patient_password_change' %}">
+                            {% csrf_token %}
+
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Current Password</label>
+                                {{ password_form.old_password }}
+                                {% if password_form.old_password.errors %}
+                                <div class="text-danger small mt-1">
+                                    {{ password_form.old_password.errors }}
+                                </div>
+                                {% endif %}
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">New Password</label>
+                                {{ password_form.new_password1 }}
+                                {% if password_form.new_password1.errors %}
+                                <div class="text-danger small mt-1">
+                                    {{ password_form.new_password1.errors }}
+                                </div>
+                                {% endif %}
+                                <div class="form-text">
+                                    <ul class="small mb-0">
+                                        <li>At least 8 characters</li>
+                                        <li>Not too common</li>
+                                        <li>Not entirely numeric</li>
+                                    </ul>
+                                </div>
+                            </div>
+
+                            <div class="mb-4">
+                                <label class="form-label fw-bold">Confirm New Password</label>
+                                {{ password_form.new_password2 }}
+                                {% if password_form.new_password2.errors %}
+                                <div class="text-danger small mt-1">
+                                    {{ password_form.new_password2.errors }}
+                                </div>
+                                {% endif %}
+                            </div>
+
+                            <div class="d-flex justify-content-between align-items-center">
+                                <a href="{% url 'patient_dashboard' %}" class="btn btn-outline-secondary">
+                                    <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+                                </a>
+                                <button type="submit" class="btn btn-warning">
+                                    <i class="fas fa-key me-2"></i>Change Password
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Quick Links -->
+                <div class="card shadow-sm border-0 mt-4">
+                    <div class="card-body">
+                        <h6 class="text-dark mb-3">Quick Links</h6>
+                        <div class="row g-2">
+                            <div class="col-md-6">
+                                <a href="{% url 'patient_profile_update' %}" class="btn btn-outline-primary w-100">
+                                    <i class="fas fa-user-edit me-2"></i>Update Profile
+                                </a>
+                            </div>
+                            <div class="col-md-6">
+                                <a href="{% url 'patient_dashboard' %}" class="btn btn-outline-secondary w-100">
+                                    <i class="fas fa-tachometer-alt me-2"></i>Dashboard
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.card {
+    border-radius: 12px;
+}
+
+.card-header {
+    border-radius: 12px 12px 0 0 !important;
+}
+
+.profile-image-container {
+    transition: all 0.3s ease;
+}
+
+.profile-image-container:hover {
+    transform: scale(1.02);
+}
+
+.default-avatar {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.btn-warning {
+    background: linear-gradient(135deg, #ffc107 0%, #e0a800 100%);
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+}
+
+.btn-warning:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(255, 193, 7, 0.3);
+}
+
+.form-control {
+    border-radius: 8px;
+    padding: 10px 15px;
+}
+
+.form-control:focus {
+    box-shadow: 0 0 0 0.2rem rgba(255, 193, 7, 0.25);
+    border-color: #ffc107;
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Profile image preview and upload
+document.getElementById('profile_image').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (file) {
+        // Preview image
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const preview = document.getElementById('profile-image-preview');
+            if (preview.tagName === 'IMG') {
+                preview.src = e.target.result;
+            } else {
+                // Replace default avatar with image
+                const img = document.createElement('img');
+                img.src = e.target.result;
+                img.className = 'rounded-circle img-fluid border border-4 border-primary shadow';
+                img.style = 'width: 150px; height: 150px; object-fit: cover;';
+                img.id = 'profile-image-preview';
+                preview.parentNode.replaceChild(img, preview);
+            }
+        };
+        reader.readAsDataURL(file);
+
+        // Upload image
+        const formData = new FormData(document.getElementById('profile-image-form'));
+        fetch("{% url 'patient_profile_image_update' %}", {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showToast('Profile image updated successfully!', 'success');
+            } else {
+                showToast(data.error, 'error');
+                // Revert preview on error
+                location.reload();
+            }
+        })
+        .catch(error => {
+            showToast('Error uploading image', 'error');
+            location.reload();
+        });
+    }
+});
+
+function removeProfileImage() {
+    if (confirm('Are you sure you want to remove your profile image?')) {
+        showToast('Removing image...', 'info');
+
+        const formData = new FormData();
+        formData.append('remove_image', 'true');
+        formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+
+        fetch("{% url 'patient_profile_image_update' %}", {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showToast('Profile image removed successfully!', 'success');
+                // Reload the page to show default avatar
+                setTimeout(() => {
+                    location.reload();
+                }, 1000);
+            } else {
+                showToast(data.error || 'Error removing image', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Remove error:', error);
+            showToast('Error removing image', 'error');
+        });
+    }
+}
+
+function showToast(message, type) {
+    // Simple toast notification
+    const toast = document.createElement('div');
+    toast.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
+    toast.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+    toast.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    document.body.appendChild(toast);
+
+    // Auto remove after 5 seconds
+    setTimeout(() => {
+        if (toast.parentNode) {
+            toast.parentNode.removeChild(toast);
+        }
+    }, 5000);
+}
+</script>
+{% endblock %}

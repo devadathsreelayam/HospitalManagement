@@ -35,29 +35,113 @@
 
 <div class="row mt-4">
     <div class="col-md-12">
-        <div class="card">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <h5 class="mb-0">Account Management</h5>
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                <h5 class="mb-0 text-dark">
+                    <i class="fas fa-cog me-2 text-primary"></i>Account Management
+                </h5>
             </div>
             <div class="card-body">
                 <div class="row">
-                    <div class="col-md-6">
+                    <!-- Profile Information -->
+                    <div class="col-md-4 mb-3">
                         <div class="d-grid gap-2">
                             <a href="{% url 'patient_profile_update' %}" class="btn btn-outline-primary">
-                                <i class="fas fa-user-edit me-2"></i> Update Profile Information
+                                <i class="fas fa-user-edit me-2"></i> Update Profile
                             </a>
-                            <small class="text-muted text-center">Update your personal and contact details</small>
+                            <small class="text-muted text-center">Personal & contact details</small>
                         </div>
                     </div>
-                    <div class="col-md-6">
+
+                    <!-- Profile Settings -->
+                    <div class="col-md-4 mb-3">
                         <div class="d-grid gap-2">
-                            <button class="btn btn-outline-secondary" disabled>
-                                <i class="fas fa-lock me-2"></i> Change Password (Coming Soon)
-                            </button>
-                            <small class="text-muted text-center">Password change functionality</small>
+                            <a href="{% url 'patient_profile_settings' %}" class="btn btn-outline-warning">
+                                <i class="fas fa-camera me-2"></i> Profile Settings
+                            </a>
+                            <small class="text-muted text-center">Photo & password</small>
+                        </div>
+                    </div>
+
+                    <!-- Medical History -->
+                    <div class="col-md-4 mb-3">
+                        <div class="d-grid gap-2">
+                            <a href="{% url 'patient_treatment_history' %}" class="btn btn-outline-info">
+                                <i class="fas fa-history me-2"></i> Medical History
+                            </a>
+                            <small class="text-muted text-center">Treatment records</small>
                         </div>
                     </div>
                 </div>
+
+                <!-- Quick Stats Row -->
+                <div class="row mt-4 pt-3 border-top">
+                    <div class="col-md-3 text-center">
+                        <div class="stat-item">
+                            <i class="fas fa-user-circle fa-2x text-primary mb-2"></i>
+                            <div class="h5 mb-1">
+                                {% if user.profile_image %}
+                                    <span class="text-success">✓</span>
+                                {% else %}
+                                    <span class="text-muted">—</span>
+                                {% endif %}
+                            </div>
+                            <small class="text-muted">Profile Photo</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3 text-center">
+                        <div class="stat-item">
+                            <i class="fas fa-phone fa-2x text-primary mb-2"></i>
+                            <div class="h5 mb-1">
+                                {% if user.phone %}
+                                    <span class="text-success">✓</span>
+                                {% else %}
+                                    <span class="text-warning">!</span>
+                                {% endif %}
+                            </div>
+                            <small class="text-muted">Phone Number</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3 text-center">
+                        <div class="stat-item">
+                            <i class="fas fa-map-marker-alt fa-2x text-primary mb-2"></i>
+                            <div class="h5 mb-1">
+                                {% if user.patient.address %}
+                                    <span class="text-success">✓</span>
+                                {% else %}
+                                    <span class="text-warning">!</span>
+                                {% endif %}
+                            </div>
+                            <small class="text-muted">Address</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3 text-center">
+                        <div class="stat-item">
+                            <i class="fas fa-ambulance fa-2x text-primary mb-2"></i>
+                            <div class="h5 mb-1">
+                                {% if user.patient.emergency_contact %}
+                                    <span class="text-success">✓</span>
+                                {% else %}
+                                    <span class="text-warning">!</span>
+                                {% endif %}
+                            </div>
+                            <small class="text-muted">Emergency Contact</small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Completion Alert -->
+                {% if not user.phone or not user.patient.address or not user.patient.emergency_contact %}
+                <div class="alert alert-warning mt-3 mb-0">
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-exclamation-triangle me-3 fa-lg"></i>
+                        <div>
+                            <h6 class="alert-heading mb-1">Complete Your Profile</h6>
+                            <p class="mb-0">Some information is missing. Please update your profile for better healthcare services.</p>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
             </div>
         </div>
     </div>
@@ -309,6 +393,64 @@ h3.fw-bold {
     .icon-container {
         width: 50px;
         height: 50px;
+    }
+}
+
+.stat-item {
+    padding: 15px;
+    border-radius: 10px;
+    transition: all 0.3s ease;
+    background: #f8f9fa;
+}
+
+.stat-item:hover {
+    background: #e9ecef;
+    transform: translateY(-2px);
+}
+
+.btn {
+    border-radius: 8px;
+    padding: 12px 20px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.btn:hover {
+    transform: translateY(-1px);
+}
+
+.alert-warning {
+    border-radius: 10px;
+    border-left: 4px solid #ffc107;
+}
+
+.card {
+    border-radius: 12px;
+}
+
+.card-header {
+    border-radius: 12px 12px 0 0 !important;
+}
+
+.border-top {
+    border-top: 2px solid #e9ecef !important;
+}
+
+.text-success {
+    color: #198754 !important;
+}
+
+.text-warning {
+    color: #fd7e14 !important;
+}
+
+@media (max-width: 768px) {
+    .col-md-4 {
+        margin-bottom: 15px;
+    }
+
+    .stat-item {
+        padding: 10px;
     }
 }
 </style>

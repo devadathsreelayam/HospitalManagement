@@ -1,5 +1,5 @@
 from django import forms
-from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth.forms import UserCreationForm, PasswordChangeForm
 from .models import User, Patient, LabReport, Doctor
 
 
@@ -165,6 +165,55 @@ class PatientProfileUpdateForm(forms.ModelForm):
             patient.save()
 
         return patient
+
+
+class PatientProfileImageForm(forms.ModelForm):
+    class Meta:
+        model = User
+        fields = ['profile_image']
+        widgets = {
+            'profile_image': forms.FileInput(attrs={
+                'class': 'form-control',
+                'accept': 'image/*'
+            })
+        }
+
+    def clean_profile_image(self):
+        image = self.cleaned_data.get('profile_image')
+        if image:
+            # Validate file size (5MB limit)
+            if image.size > 5 * 1024 * 1024:
+                raise forms.ValidationError("Image file too large ( > 5MB )")
+            # Validate file extension
+            valid_extensions = ['jpg', 'jpeg', 'png', 'gif', 'webp']
+            extension = image.name.split('.')[-1].lower()
+            if extension not in valid_extensions:
+                raise forms.ValidationError("Unsupported file extension. Please use JPG, PNG, or GIF.")
+        return image
+
+
+class PatientPasswordChangeForm(PasswordChangeForm):
+    old_password = forms.CharField(
+        widget=forms.PasswordInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Enter current password'
+        })
+    )
+    new_password1 = forms.CharField(
+        widget=forms.PasswordInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Enter new password'
+        })
+    )
+    new_password2 = forms.CharField(
+        widget=forms.PasswordInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Confirm new password'
+        })
+    )
+
+    class Meta:
+        fields = ['old_password', 'new_password1', 'new_password2']
 
 
 class LabReportForm(forms.ModelForm):
