@@ -3,20 +3,56 @@
 {% block content %}
 <div class="row">
     <div class="col-md-12">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <div>
-                <h2>Treatment History with Dr. {{ doctor.user.get_full_name }}</h2>
-                <p class="text-muted">
-                    {{ doctor.get_specialization_display }} • {{ doctor.qualification }}
-                </p>
+        <div class="d-flex align-items-center mb-4">
+            <!-- Doctor Profile Image -->
+            <div class="doctor-profile-image me-4">
+                {% if doctor.user.profile_image %}
+                    <img src="{{ doctor.user.profile_image.url }}"
+                         alt="Dr. {{ doctor.user.get_full_name }}"
+                         class="rounded-circle img-fluid border border-4 border-primary shadow"
+                         style="width: 100px; height: 100px; object-fit: cover;">
+                {% else %}
+                    <div class="default-avatar rounded-circle d-flex align-items-center justify-content-center bg-primary text-white border border-4 border-primary shadow"
+                         style="width: 100px; height: 100px;">
+                        <i class="fas fa-user-md fa-2x"></i>
+                    </div>
+                {% endif %}
             </div>
-            <div>
-                <a href="{% url 'patient_treatment_history' %}" class="btn btn-outline-secondary">
-                    <i class="fas fa-arrow-left"></i> All Doctors
-                </a>
-                <a href="{% url 'patient_dashboard' %}" class="btn btn-outline-primary">
-                    <i class="fas fa-tachometer-alt"></i> Dashboard
-                </a>
+
+            <div class="flex-grow-1">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <h2 class="text-primary mb-1">Treatment History with Dr. {{ doctor.user.get_full_name }}</h2>
+                        <p class="text-muted mb-2">
+                            <span class="badge bg-info bg-opacity-10 text-info border border-info fs-6">
+                                {{ doctor.get_specialization_display }}
+                            </span>
+                            • {{ doctor.qualification }}
+                        </p>
+                        <div class="doctor-stats small text-muted">
+                            <span class="me-3">
+                                <i class="fas fa-calendar-check me-1"></i>
+                                First visit: {{ first_visit|date:"M d, Y" }}
+                            </span>
+                            <span class="me-3">
+                                <i class="fas fa-calendar-alt me-1"></i>
+                                Last visit: {{ last_visit|date:"M d, Y" }}
+                            </span>
+                            <span>
+                                <i class="fas fa-stethoscope me-1"></i>
+                                {{ total_visits }} consultation{{ total_visits|pluralize }}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="btn-group">
+                        <a href="{% url 'patient_treatment_history' %}" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left me-1"></i> All Doctors
+                        </a>
+                        <a href="{% url 'patient_dashboard' %}" class="btn btn-outline-primary">
+                            <i class="fas fa-tachometer-alt me-1"></i> Dashboard
+                        </a>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -205,6 +241,65 @@
         </div>
     </div>
 </div>
+
+<style>
+.doctor-profile-image img,
+.default-avatar {
+    transition: transform 0.3s ease;
+}
+
+.doctor-profile-image:hover img,
+.default-avatar:hover {
+    transform: scale(1.05);
+}
+
+.default-avatar {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.doctor-stats {
+    border-top: 1px solid #e9ecef;
+    padding-top: 10px;
+    margin-top: 10px;
+}
+
+.bg-opacity-10 {
+    background-color: rgba(13, 202, 240, 0.1) !important;
+}
+
+.btn-group .btn {
+    border-radius: 8px;
+    margin-left: 5px;
+}
+
+@media (max-width: 768px) {
+    .d-flex.align-items-center {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .doctor-profile-image {
+        margin-bottom: 20px;
+        margin-right: 0 !important;
+    }
+
+    .doctor-profile-image img,
+    .default-avatar {
+        width: 80px !important;
+        height: 80px !important;
+    }
+
+    .btn-group {
+        margin-top: 15px;
+        width: 100%;
+    }
+
+    .btn-group .btn {
+        flex: 1;
+        margin: 2px;
+    }
+}
+</style>
 {% endblock %}
 
 {% block extra_js %}

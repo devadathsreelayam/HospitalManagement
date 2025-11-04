@@ -71,9 +71,11 @@
 <!-- Doctors List -->
 <div class="row">
     <div class="col-md-12">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="mb-0">Treatment History by Doctor</h5>
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-light">
+                <h5 class="mb-0 text-dark">
+                    <i class="fas fa-history me-2 text-primary"></i>Treatment History by Doctor
+                </h5>
                 <small class="text-muted">Click on a doctor to view detailed consultation history</small>
             </div>
             <div class="card-body">
@@ -81,40 +83,59 @@
                 <div class="row">
                     {% for doctor in doctors_history %}
                     <div class="col-lg-6 mb-4">
-                        <div class="card h-100 border">
+                        <div class="card h-100 border-0 shadow-sm doctor-history-card">
                             <div class="card-body">
-                                <div class="d-flex justify-content-between align-items-start mb-3">
-                                    <div>
-                                        <h5 class="card-title mb-1">Dr. {{ doctor.user.get_full_name }}</h5>
-                                        <p class="card-text text-muted mb-1">
-                                            {{ doctor.get_specialization_display }} • {{ doctor.qualification }}
-                                        </p>
+                                <div class="d-flex align-items-start">
+                                    <!-- Doctor Profile Image -->
+                                    <div class="doctor-avatar me-3">
+                                        {% if doctor.user.profile_image %}
+                                            <img src="{{ doctor.user.profile_image.url }}"
+                                                 alt="Dr. {{ doctor.user.get_full_name }}"
+                                                 class="rounded-circle img-fluid border border-2 border-primary"
+                                                 style="width: 70px; height: 70px; object-fit: cover;">
+                                        {% else %}
+                                            <div class="default-avatar rounded-circle d-flex align-items-center justify-content-center bg-primary text-white border border-2 border-primary"
+                                                 style="width: 70px; height: 70px;">
+                                                <i class="fas fa-user-md fa-lg"></i>
+                                            </div>
+                                        {% endif %}
                                     </div>
-                                    <span class="badge bg-primary">{{ doctor.total_consultations }} visits</span>
-                                </div>
 
-                                <div class="doctor-stats mb-3">
-                                    <small class="text-muted d-block">
-                                        <i class="fas fa-calendar-check"></i>
-                                        First visit: {{ doctor.first_visit|date:"M d, Y" }}
-                                    </small>
-                                    <small class="text-muted d-block">
-                                        <i class="fas fa-calendar-alt"></i>
-                                        Last visit: {{ doctor.last_visit|date:"M d, Y" }}
-                                    </small>
-                                    {% if doctor.has_prescriptions %}
-                                    <small class="text-success d-block">
-                                        <i class="fas fa-prescription"></i>
-                                        Prescriptions available
-                                    </small>
-                                    {% endif %}
-                                </div>
+                                    <div class="flex-grow-1">
+                                        <div class="d-flex justify-content-between align-items-start mb-2">
+                                            <div>
+                                                <h5 class="card-title mb-1">Dr. {{ doctor.user.get_full_name }}</h5>
+                                                <p class="card-text text-muted mb-1 small">
+                                                    {{ doctor.get_specialization_display }} • {{ doctor.qualification }}
+                                                </p>
+                                            </div>
+                                            <span class="badge bg-primary">{{ doctor.total_consultations }} visit{{ doctor.total_consultations|pluralize }}</span>
+                                        </div>
 
-                                <div class="d-grid">
-                                    <a href="{% url 'patient_doctor_history' doctor.id %}"
-                                       class="btn btn-outline-primary btn-sm">
-                                        <i class="fas fa-history"></i> View Complete History
-                                    </a>
+                                        <div class="doctor-stats mb-3">
+                                            <small class="text-muted d-block mb-1">
+                                                <i class="fas fa-calendar-check me-1"></i>
+                                                First visit: {{ doctor.first_visit|date:"M d, Y" }}
+                                            </small>
+                                            <small class="text-muted d-block mb-1">
+                                                <i class="fas fa-calendar-alt me-1"></i>
+                                                Last visit: {{ doctor.last_visit|date:"M d, Y" }}
+                                            </small>
+                                            {% if doctor.has_prescriptions %}
+                                            <small class="text-success d-block">
+                                                <i class="fas fa-prescription me-1"></i>
+                                                Prescriptions available
+                                            </small>
+                                            {% endif %}
+                                        </div>
+
+                                        <div class="d-grid">
+                                            <a href="{% url 'patient_doctor_history' doctor.id %}"
+                                               class="btn btn-outline-primary btn-sm">
+                                                <i class="fas fa-history me-1"></i> View Complete History
+                                            </a>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -129,7 +150,7 @@
                     <h4 class="text-muted">No Medical History Found</h4>
                     <p class="text-muted">You haven't had any consultations yet.</p>
                     <a href="{% url 'view_doctors' %}" class="btn btn-primary mt-2">
-                        <i class="fas fa-calendar-plus"></i> Book Your First Appointment
+                        <i class="fas fa-calendar-plus me-1"></i> Book Your First Appointment
                     </a>
                 </div>
                 {% endif %}
@@ -137,4 +158,52 @@
         </div>
     </div>
 </div>
+
+<style>
+.doctor-history-card {
+    transition: all 0.3s ease;
+    border-radius: 12px;
+}
+
+.doctor-history-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.1) !important;
+}
+
+.doctor-avatar img,
+.default-avatar {
+    transition: transform 0.3s ease;
+}
+
+.doctor-history-card:hover .doctor-avatar img,
+.doctor-history-card:hover .default-avatar {
+    transform: scale(1.05);
+}
+
+.default-avatar {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.badge {
+    font-weight: 500;
+    padding: 0.4em 0.7em;
+}
+
+.doctor-stats {
+    border-left: 3px solid #e9ecef;
+    padding-left: 10px;
+}
+
+@media (max-width: 768px) {
+    .doctor-avatar {
+        margin-bottom: 15px;
+    }
+
+    .doctor-avatar img,
+    .default-avatar {
+        width: 60px !important;
+        height: 60px !important;
+    }
+}
+</style>
 {% endblock %}

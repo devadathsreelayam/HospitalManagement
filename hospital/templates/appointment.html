@@ -38,33 +38,208 @@
     </div>
 
     <div class="col-md-4">
-        <div class="card">
-            <div class="card-header">
-                <h5>Doctor Information</h5>
+        <!-- Doctor Profile Card -->
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-primary text-white text-center py-3">
+                <h5 class="mb-0"><i class="fas fa-user-md me-2"></i>Doctor Profile</h5>
             </div>
-            <div class="card-body">
-                <p><strong>Dr. {{ doctor.user.get_full_name }}</strong></p>
-                <p>{{ doctor.get_specialization_display }}</p>
-                <p><small>Available Days: {{ doctor.available_days|title }}</small></p>
-                <p><small>Consultation Hours: {{ doctor.start_time|time:"g:i A" }} - {{ doctor.end_time|time:"g:i A" }}</small></p>
-                <p><small>Approx. Time per Patient: 10 minutes</small></p>
+            <div class="card-body text-center p-4">
+                <!-- Doctor Image -->
+                <div class="doctor-profile-image mb-3">
+                    {% if doctor.user.profile_image %}
+                        <img src="{{ doctor.user.profile_image.url }}"
+                             alt="Dr. {{ doctor.user.get_full_name }}"
+                             class="rounded-circle img-fluid border border-4 border-primary"
+                             style="width: 120px; height: 120px; object-fit: cover;">
+                    {% else %}
+                        <div class="default-avatar rounded-circle mx-auto d-flex align-items-center justify-content-center bg-primary text-white border border-4 border-primary"
+                             style="width: 120px; height: 120px;">
+                            <i class="fas fa-user-md fa-2x"></i>
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Doctor Basic Info -->
+                <h4 class="text-primary mb-1">Dr. {{ doctor.user.get_full_name }}</h4>
+                <p class="text-muted mb-2">{{ doctor.qualification }}</p>
+
+                <div class="specialization-badge mb-3">
+                    <span class="badge bg-info bg-opacity-10 text-info border border-info fs-6">
+                        <i class="fas fa-stethoscope me-1"></i>{{ doctor.get_specialization_display }}
+                    </span>
+                </div>
+
+                <!-- Contact Information -->
+                <div class="contact-info mb-3 p-3 bg-light rounded">
+                    <div class="row small text-muted">
+                        <div class="col-12 mb-2">
+                            <i class="fas fa-envelope text-primary me-2"></i>
+                            <span>{{ doctor.user.email }}</span>
+                        </div>
+                        {% if doctor.user.phone %}
+                        <div class="col-12">
+                            <i class="fas fa-phone text-primary me-2"></i>
+                            <span>{{ doctor.user.phone }}</span>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Availability Section -->
+            <div class="availability-section p-3 bg-light">
+                <h6 class="text-dark mb-3"><i class="fas fa-calendar-alt me-2 text-primary"></i>Availability</h6>
+
+                <!-- Working Hours -->
+                <div class="working-hours mb-3">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="text-muted small">
+                            <i class="fas fa-clock me-1"></i>Consultation Hours
+                        </span>
+                        <span class="fw-bold text-dark">
+                            {{ doctor.start_time|time:"g:i A" }} - {{ doctor.end_time|time:"g:i A" }}
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Available Days -->
+                <div class="available-days mb-3">
+                    <span class="text-muted small d-block mb-1">
+                        <i class="fas fa-calendar-day me-1"></i>Available Days
+                    </span>
+                    <div class="days-badges">
+                        {% for day in doctor.available_days.split %}
+                            <span class="badge bg-success bg-opacity-10 text-success border border-success me-1 mb-1 small">
+                                {{ day|title }}
+                            </span>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Consultation Time -->
+                <div class="consultation-time">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="text-muted small">
+                            <i class="fas fa-stopwatch me-1"></i>Per Patient
+                        </span>
+                        <span class="badge bg-warning text-dark">10 minutes</span>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <!-- Show today's appointments for this doctor -->
-        <div class="card mt-3">
-            <div class="card-header">
-                <h6>Today's Appointments</h6>
+        <!-- Today's Appointments Card -->
+        <div class="card border-0 shadow-sm mt-4">
+            <div class="card-header bg-info text-white py-3">
+                <h6 class="mb-0"><i class="fas fa-calendar-check me-2"></i>Today's Schedule</h6>
             </div>
-            <div class="card-body">
+            <div class="card-body text-center p-4">
                 {% if today_appointments_count > 0 %}
-                    <p class="mb-1">Total today: {{ today_appointments_count }}</p>
-                    <p class="mb-0">Last token: #{{ last_token_today }}</p>
+                    <div class="appointments-stats">
+                        <div class="stat-item mb-3">
+                            <div class="stat-number display-6 text-primary fw-bold">{{ today_appointments_count }}</div>
+                            <div class="stat-label text-muted small">Total Appointments</div>
+                        </div>
+
+                        <div class="stat-item">
+                            <div class="stat-number h4 text-success fw-bold">#{{ last_token_today }}</div>
+                            <div class="stat-label text-muted small">Last Token Issued</div>
+                        </div>
+
+                        <!-- Estimated Next Token -->
+                        <div class="next-token mt-3 p-2 bg-light rounded">
+                            <small class="text-muted">
+                                <i class="fas fa-info-circle me-1"></i>
+                                Your token will be #{{ last_token_today|add:1 }}
+                            </small>
+                        </div>
+                    </div>
                 {% else %}
-                    <p class="mb-0">No appointments today</p>
+                    <div class="no-appointments text-center py-3">
+                        <i class="fas fa-calendar-times fa-2x text-muted mb-3"></i>
+                        <h6 class="text-muted mb-2">No Appointments Today</h6>
+                        <p class="text-muted small mb-0">Be the first to book today!</p>
+                    </div>
                 {% endif %}
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="card border-0 shadow-sm mt-4">
+            <div class="card-body text-center p-3">
+                <h6 class="text-dark mb-3">Quick Actions</h6>
+                <div class="d-grid gap-2">
+                    <a href="{% url 'view_doctors' %}" class="btn btn-outline-primary btn-sm">
+                        <i class="fas fa-arrow-left me-1"></i>Back to Doctors
+                    </a>
+                    <button class="btn btn-outline-info btn-sm" onclick="window.print()">
+                        <i class="fas fa-print me-1"></i>Print Info
+                    </button>
+                </div>
             </div>
         </div>
     </div>
 </div>
+
+<style>
+.doctor-profile-image img,
+.default-avatar {
+    transition: transform 0.3s ease;
+}
+
+.doctor-profile-image:hover img,
+.default-avatar:hover {
+    transform: scale(1.05);
+}
+
+.availability-section {
+    border-top: 1px solid #e9ecef;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.days-badges .badge {
+    font-size: 0.7rem;
+    padding: 0.3em 0.6em;
+}
+
+.contact-info {
+    background: linear-gradient(135deg, #f8f9fa, #e9ecef) !important;
+}
+
+.stat-item {
+    padding: 0.5rem;
+}
+
+.stat-number {
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+}
+
+.next-token {
+    border-left: 3px solid #28a745;
+}
+
+.card {
+    border-radius: 12px;
+}
+
+.card-header {
+    border-radius: 12px 12px 0 0 !important;
+}
+
+.bg-opacity-10 {
+    background-color: rgba(13, 110, 253, 0.1) !important;
+}
+
+/* Print styles */
+@media print {
+    .btn {
+        display: none !important;
+    }
+
+    .card {
+        box-shadow: none !important;
+        border: 1px solid #dee2e6 !important;
+    }
+}
+</style>
 {% endblock %}

@@ -2,8 +2,34 @@
 {% block content %}
 <div class="row">
     <div class="col-md-12">
-        <h2>Welcome, {{ user.get_full_name }}</h2>
-        <p class="text-muted">Patient Dashboard</p>
+        <div class="d-flex align-items-center mb-4">
+            <!-- Patient Profile Image -->
+            <div class="patient-avatar me-4">
+                {% if user.profile_image %}
+                    <img src="{{ user.profile_image.url }}"
+                         alt="{{ user.get_full_name }}"
+                         class="rounded-circle img-fluid border border-4 border-primary shadow-sm"
+                         style="width: 80px; height: 80px; object-fit: cover;">
+                {% else %}
+                    <div class="default-avatar rounded-circle d-flex align-items-center justify-content-center bg-primary text-white border border-4 border-primary shadow-sm"
+                         style="width: 80px; height: 80px;">
+                        <i class="fas fa-user fa-2x"></i>
+                    </div>
+                {% endif %}
+            </div>
+            <div>
+                <h2 class="text-primary mb-1">Welcome, {{ user.get_full_name }}</h2>
+                <p class="text-muted mb-0">
+                    <i class="fas fa-heartbeat me-1"></i>Patient Dashboard
+                </p>
+                <small class="text-muted">
+                    <i class="fas fa-envelope me-1"></i>{{ user.email }}
+                    {% if user.phone %}
+                    • <i class="fas fa-phone me-1"></i>{{ user.phone }}
+                    {% endif %}
+                </small>
+            </div>
+        </div>
     </div>
 </div>
 

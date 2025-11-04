@@ -4,17 +4,17 @@
 <div class="row">
     <!-- Search and Filter Section -->
     <div class="col-md-3">
-        <div class="card mb-4">
-            <div class="card-header">
-                <h5>Find Doctors</h5>
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-search me-2"></i>Find Doctors</h5>
             </div>
             <div class="card-body">
                 <!-- Search Form -->
-                <form method="get" class="mb-3">
+                <form method="get" class="mb-4">
                     <div class="input-group">
-                        <input type="text" name="search" class="form-control"
-                               placeholder="Search doctors..." value="{{ search_query }}">
-                        <button class="btn btn-outline-primary" type="submit">
+                        <input type="text" name="search" class="form-control border-primary"
+                               placeholder="Search by name..." value="{{ search_query }}">
+                        <button class="btn btn-primary" type="submit">
                             <i class="fas fa-search"></i>
                         </button>
                     </div>
@@ -24,8 +24,8 @@
                 <form method="get">
                     <input type="hidden" name="search" value="{{ search_query }}">
                     <div class="mb-3">
-                        <label class="form-label"><strong>Filter by Specialization</strong></label>
-                        <select name="specialization" class="form-select" onchange="this.form.submit()">
+                        <label class="form-label fw-bold text-dark">Specialization</label>
+                        <select name="specialization" class="form-select border-primary" onchange="this.form.submit()">
                             <option value="">All Specializations</option>
                             {% for value, label in specializations %}
                                 <option value="{{ value }}"
@@ -38,11 +38,20 @@
 
                     <!-- Clear Filters -->
                     {% if selected_specialization or search_query %}
-                    <a href="{% url 'view_doctors' %}" class="btn btn-outline-secondary btn-sm">
-                        Clear Filters
+                    <a href="{% url 'view_doctors' %}" class="btn btn-outline-secondary btn-sm w-100">
+                        <i class="fas fa-times me-1"></i>Clear Filters
                     </a>
                     {% endif %}
                 </form>
+            </div>
+        </div>
+
+        <!-- Quick Stats -->
+        <div class="card border-0 shadow-sm">
+            <div class="card-body text-center">
+                <h6 class="text-muted mb-3">Medical Team</h6>
+                <div class="display-6 text-primary fw-bold">{{ doctors.count }}</div>
+                <small class="text-muted">Available Doctors</small>
             </div>
         </div>
     </div>
@@ -50,8 +59,11 @@
     <!-- Doctors Listing Section -->
     <div class="col-md-9">
         <div class="d-flex justify-content-between align-items-center mb-4">
-            <h2>Our Medical Team</h2>
-            <span class="text-muted">{{ doctors.count }} doctor(s) found</span>
+            <div>
+                <h2 class="text-primary mb-1">Our Medical Team</h2>
+                <p class="text-muted mb-0">Experienced healthcare professionals dedicated to your well-being</p>
+            </div>
+            <span class="badge bg-primary fs-6">{{ doctors.count }} doctor{{ doctors.count|pluralize }}</span>
         </div>
 
         {% if doctors %}
@@ -60,27 +72,78 @@
 
             {% for specialization in specialization_list %}
             <div class="specialization-section mb-5">
-                <h4 class="border-bottom pb-2 text-primary">{{ specialization.grouper }} Department</h4>
+                <div class="d-flex align-items-center mb-3">
+                    <div class="department-icon me-3">
+                        <i class="fas fa-stethoscope fa-2x text-primary"></i>
+                    </div>
+                    <div>
+                        <h4 class="text-primary mb-0">{{ specialization.grouper }} Department</h4>
+                        <small class="text-muted">{{ specialization.list|length }} specialist{{ specialization.list|length|pluralize }} available</small>
+                    </div>
+                </div>
+
                 <div class="row">
                     {% for doctor in specialization.list %}
-                    <div class="col-lg-6 mb-3">
-                        <div class="card h-100">
-                            <div class="card-body">
-                                <h5 class="card-title">Dr. {{ doctor.user.get_full_name }}, {{ doctor.qualification }}</h5>
-                                <p class="card-text">
-                                    <span class="badge bg-info">{{ doctor.get_specialization_display }}</span><br>
+                    <div class="col-xl-4 col-lg-6 mb-4">
+                        <div class="card doctor-card h-100 border-0 shadow-sm">
+                            <div class="card-body text-center p-4">
+                                <!-- Doctor Image -->
+                                <div class="doctor-image mb-3">
+                                    {% if doctor.user.profile_image %}
+                                        <img src="{{ doctor.user.profile_image.url }}"
+                                             alt="Dr. {{ doctor.user.get_full_name }}"
+                                             class="rounded-circle img-fluid"
+                                             style="width: 120px; height: 120px; object-fit: cover; border: 4px solid #e3f2fd;">
+                                    {% else %}
+                                        <div class="default-avatar rounded-circle mx-auto d-flex align-items-center justify-content-center bg-primary text-white"
+                                             style="width: 120px; height: 120px; border: 4px solid #e3f2fd;">
+                                            <i class="fas fa-user-md fa-3x"></i>
+                                        </div>
+                                    {% endif %}
+                                </div>
+
+                                <!-- Doctor Info -->
+                                <h5 class="card-title mb-1">Dr. {{ doctor.user.get_full_name }}</h5>
+                                <p class="text-muted mb-2">{{ doctor.qualification }}</p>
+
+                                <div class="specialization-badge mb-3">
+                                    <span class="badge bg-info bg-opacity-10 text-info border border-info">
+                                        {{ doctor.get_specialization_display }}
+                                    </span>
+                                </div>
+
+                                <!-- Availability -->
+                                <div class="availability-info mb-3">
+                                    <div class="row small text-muted">
+                                        <div class="col-12 mb-1">
+                                            <i class="fas fa-clock me-1"></i>
+                                            {{ doctor.start_time|time:"g:i A" }} - {{ doctor.end_time|time:"g:i A" }}
+                                        </div>
+                                        <div class="col-12">
+                                            <i class="fas fa-calendar me-1"></i>
+                                            {{ doctor.available_days|title }}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Contact Info (Hidden by default, show on hover) -->
+                                <div class="contact-info mt-3 pt-3 border-top" style="display: none;">
                                     <small class="text-muted">
-                                        <i class="fas fa-clock"></i>
-                                        {{ doctor.start_time|time:"g:i A" }} - {{ doctor.end_time|time:"g:i A" }}<br>
-                                        <i class="fas fa-calendar"></i>
-                                        {{ doctor.available_days|title }}
+                                        <i class="fas fa-envelope me-1"></i>{{ doctor.user.email }}<br>
+                                        <i class="fas fa-phone me-1"></i>{{ doctor.user.phone }}
                                     </small>
-                                </p>
+                                </div>
                             </div>
-                            <div class="card-footer bg-transparent">
-                                <a href="{% url 'make_appointment' doctor.id %}"
-                                   class="btn btn-primary btn-sm">Book Appointment</a>
-                                <a href="#" class="btn btn-outline-secondary btn-sm">View Profile</a>
+                            <div class="card-footer bg-transparent border-0 pt-0">
+                                <div class="btn-group w-100" role="group">
+                                    <a href="{% url 'make_appointment' doctor.id %}"
+                                       class="btn btn-primary btn-sm">
+                                        <i class="fas fa-calendar-plus me-1"></i>Book
+                                    </a>
+                                    <button type="button" class="btn btn-outline-primary btn-sm contact-toggle">
+                                        <i class="fas fa-phone me-1"></i>Contact
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -90,12 +153,150 @@
             {% endfor %}
 
         {% else %}
+            <!-- No Results -->
             <div class="text-center py-5">
-                <h4 class="text-muted">No doctors found</h4>
-                <p class="text-muted">Try adjusting your search or filters</p>
-                <a href="{% url 'view_doctors' %}" class="btn btn-primary">Show All Doctors</a>
+                <div class="empty-state">
+                    <i class="fas fa-user-md fa-4x text-muted mb-3"></i>
+                    <h4 class="text-muted">No doctors found</h4>
+                    <p class="text-muted mb-4">Try adjusting your search criteria or filters</p>
+                    <a href="{% url 'view_doctors' %}" class="btn btn-primary">
+                        <i class="fas fa-redo me-1"></i>Show All Doctors
+                    </a>
+                </div>
             </div>
         {% endif %}
     </div>
 </div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.doctor-card {
+    transition: all 0.3s ease;
+    border-radius: 15px;
+}
+
+.doctor-card:hover {
+    background-color: bisque;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15) !important;
+}
+
+.default-avatar {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.department-icon {
+    width: 60px;
+    height: 60px;
+    background: linear-gradient(135deg, #e3f2fd, #bbdefb);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.specialization-section {
+    padding: 20px 0;
+}
+
+.availability-info {
+    font-size: 0.85rem;
+}
+
+.btn-group .btn {
+    border-radius: 8px;
+    margin: 0 2px;
+}
+
+/* Contact info toggle animation */
+.contact-info {
+    transition: all 0.3s ease;
+}
+
+.card:hover .contact-info {
+    display: block !important;
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .doctor-image img,
+    .default-avatar {
+        width: 100px !important;
+        height: 100px !important;
+    }
+
+    .btn-group {
+        flex-direction: column;
+    }
+
+    .btn-group .btn {
+        margin: 2px 0;
+        width: 100%;
+    }
+}
+
+/* Custom badge styles */
+.badge {
+    font-weight: 500;
+    padding: 0.5em 0.8em;
+}
+
+.bg-opacity-10 {
+    background-color: rgba(var(--bs-info-rgb), 0.1) !important;
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Contact toggle functionality
+    const contactButtons = document.querySelectorAll('.contact-toggle');
+
+    contactButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const card = this.closest('.doctor-card');
+            const contactInfo = card.querySelector('.contact-info');
+            const isVisible = contactInfo.style.display === 'block';
+
+            if (isVisible) {
+                contactInfo.style.display = 'none';
+                this.innerHTML = '<i class="fas fa-phone me-1"></i>Contact';
+            } else {
+                contactInfo.style.display = 'block';
+                this.innerHTML = '<i class="fas fa-times me-1"></i>Hide';
+            }
+        });
+    });
+
+    // Smooth hover effects
+    const doctorCards = document.querySelectorAll('.doctor-card');
+
+    doctorCards.forEach(card => {
+        card.addEventListener('mouseenter', function() {
+            this.style.transform = 'translateY(-5px)';
+        });
+
+        card.addEventListener('mouseleave', function() {
+            this.style.transform = 'translateY(0)';
+            // Hide contact info when mouse leaves
+            const contactInfo = this.querySelector('.contact-info');
+            const contactBtn = this.querySelector('.contact-toggle');
+            if (contactInfo && contactInfo.style.display === 'block' &&
+                !this.matches(':hover-within')) {
+                contactInfo.style.display = 'none';
+                if (contactBtn) {
+                    contactBtn.innerHTML = '<i class="fas fa-phone me-1"></i>Contact';
+                }
+            }
+        });
+    });
+});
+</script>
 {% endblock %}
