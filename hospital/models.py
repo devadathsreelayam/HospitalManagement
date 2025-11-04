@@ -12,8 +12,14 @@ class User(AbstractUser):
         ('doctor', 'Doctor'),
     )
 
-    phone = models.CharField(max_length=10, blank=True)  # Increased length
+    phone = models.CharField(max_length=10, blank=True)
     user_type = models.CharField(max_length=10, choices=USER_TYPES, default='patient')
+    profile_image = models.ImageField(
+        upload_to='profile_images/',
+        blank=True,
+        null=True,
+        help_text='Upload a profile picture (optional)'
+    )
 
     def get_user_type_display(self):
         """Get human-readable user type"""
@@ -21,6 +27,17 @@ class User(AbstractUser):
 
     def __str__(self):
         return f"{self.username} ({self.user_type})"
+
+    @property
+    def profile_image_url(self):
+        """Return profile image URL or default avatar"""
+        if self.profile_image and hasattr(self.profile_image, 'url'):
+            return self.profile_image.url
+        return '/static/images/default-avatar.png'  # You'll need to create this
+
+    class Meta:
+        # Add this to avoid conflicts in future migrations
+        db_table = 'auth_user'
 
 
 class Patient(models.Model):
